@@ -144,3 +144,76 @@ body { margin: 0; background: var(--bg); color: var(--ink); }
 .metrics dt { color: var(--muted); }
 .metrics dd { margin: 0; font-weight: 600; }
 .assumptions { color: var(--muted); font-size: 0.8rem; margin-top: 0.6rem; }
+
+/* ---- Tier 1 shared ---- */
+.card h3 { font-size: 0.85rem; color: var(--accent-2); margin: 1rem 0 0.5rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.card table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.card th, .card td { text-align: left; padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--border); }
+.card th { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
+.rules { margin-top: 0.8rem; border-top: 1px solid var(--border); padding-top: 0.6rem; }
+.rules summary { cursor: pointer; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+.rules summary:hover { color: var(--ink); }
+.rules ol, .rules ul { margin: 0.5rem 0 0; padding-left: 1.1rem; }
+.rules li { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.25rem; line-height: 1.4; }
+
+/* ---- Fertilizer & irrigation ---- */
+.adjust-note { font-size: 0.82rem; color: var(--accent-2); background: var(--panel-2); border-left: 3px solid var(--accent); border-radius: 6px; padding: 0.4rem 0.6rem; margin: 0 0 0.5rem; line-height: 1.4; }
+.fert-stages, .irrig-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.fert-stage { background: var(--panel-2); border-radius: 8px; padding: 0.55rem 0.65rem; border-left: 3px solid #ab47bc; }
+.fert-stage.alert { border-left-color: var(--warn); box-shadow: 0 0 0 1px var(--warn); }
+.fert-head { display: flex; gap: 0.55rem; align-items: baseline; flex-wrap: wrap; }
+.fert-date { color: var(--muted); font-size: 0.82rem; font-weight: 600; min-width: 52px; }
+.fert-das { color: var(--muted); font-size: 0.72rem; border: 1px solid var(--border); border-radius: 5px; padding: 0 0.3rem; }
+.fert-stage-name { font-weight: 600; font-size: 0.9rem; flex: 1; }
+.fert-cost { color: var(--accent-2); font-size: 0.82rem; font-weight: 600; }
+.fert-inputs { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.4rem; }
+.fert-chip { font-size: 0.78rem; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 0.15rem 0.55rem; }
+.fert-chip strong { color: var(--accent-2); }
+.weather-alert { margin-top: 0.4rem; font-size: 0.82rem; color: var(--warn); background: rgba(224, 164, 88, 0.1); border-radius: 6px; padding: 0.4rem 0.5rem; line-height: 1.4; }
+.irrig-list li { display: grid; grid-template-columns: 60px 1fr; gap: 0.5rem; background: var(--panel-2); border-radius: 8px; padding: 0.5rem 0.6rem; border-left: 3px solid #29b6f6; }
+.cond-tag { color: var(--warn); font-weight: 400; font-size: 0.78rem; }
+.organic-box { margin-top: 0.9rem; border: 1px solid var(--accent); border-radius: 8px; padding: 0.6rem 0.75rem; background: var(--panel-2); }
+.organic-box h3 { margin-top: 0; }
+.organic-box p { font-size: 0.85rem; margin: 0.3rem 0; line-height: 1.5; }
+
+/* ---- Pest & disease risk ---- */
+.weather-evidence { background: var(--panel-2); border-left: 3px solid #29b6f6; border-radius: 6px; padding: 0.5rem 0.65rem; margin-bottom: 0.8rem; }
+.weather-evidence strong { font-size: 0.82rem; color: var(--accent-2); }
+.weather-evidence ul { margin: 0.3rem 0 0; padding-left: 1.1rem; }
+.weather-evidence li { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.2rem; }
+.pest-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.pest-card { background: var(--panel-2); border-radius: 8px; padding: 0.6rem 0.7rem; border-left: 3px solid var(--muted); }
+.pest-card.risk-high { border-left-color: #ef5350; box-shadow: 0 0 0 1px rgba(239, 83, 80, 0.4); }
+.pest-card.risk-med { border-left-color: var(--warn); }
+.pest-card.risk-low { border-left-color: var(--accent); }
+.pest-head { display: flex; gap: 0.5rem; align-items: baseline; flex-wrap: wrap; }
+.pest-icon { font-size: 0.9rem; }
+.pest-name { font-weight: 700; font-size: 0.92rem; }
+.pest-type { color: var(--muted); font-size: 0.72rem; border: 1px solid var(--border); border-radius: 5px; padding: 0 0.3rem; text-transform: uppercase; }
+.pest-risk-tag { margin-left: auto; font-size: 0.78rem; font-weight: 600; color: var(--accent-2); }
+.pest-symptom, .pest-threshold { font-size: 0.84rem; margin-top: 0.35rem; line-height: 1.4; }
+.pest-symptom strong, .pest-threshold strong, .pest-block strong { color: var(--accent-2); font-size: 0.8rem; }
+.pest-block { margin-top: 0.5rem; }
+.pest-block ul { margin: 0.25rem 0 0; padding-left: 1.1rem; }
+.pest-block li, .pest-block p { font-size: 0.83rem; margin: 0.15rem 0; line-height: 1.4; }
+.pest-cost { color: var(--warn); font-size: 0.82rem; margin-top: 0.3rem; }
+.pest-source { color: var(--muted); font-size: 0.72rem; margin-top: 0.4rem; }
+
+/* ---- Scenario simulation ---- */
+.scenario-chips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+.scenario-chip { font-size: 0.82rem; background: var(--panel-2); border: 1px solid var(--border); border-radius: 20px; padding: 0.2rem 0.65rem; }
+.scenario-chip strong { color: var(--warn); }
+.verdict { font-size: 0.95rem; font-weight: 600; border-radius: 8px; padding: 0.55rem 0.7rem; margin: 0 0 0.8rem; }
+.verdict-bad { color: var(--warn); background: rgba(224, 164, 88, 0.12); border-left: 3px solid var(--warn); }
+.verdict-good { color: var(--accent-2); background: rgba(76, 175, 80, 0.12); border-left: 3px solid var(--accent); }
+.delta-row.changed td { background: rgba(76, 175, 80, 0.05); }
+.delta-row td:first-child { color: var(--muted); }
+.delta-up { color: var(--accent-2); font-weight: 600; }
+.delta-down { color: #ef5350; font-weight: 600; }
+.delta-pct { font-size: 0.78rem; opacity: 0.85; }
+.delta-none { color: var(--muted); font-size: 0.8rem; }
+.alt-box { margin-top: 0.9rem; border-top: 1px solid var(--border); padding-top: 0.7rem; }
+.alt-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.alt-list li { background: var(--panel-2); border-radius: 8px; padding: 0.5rem 0.65rem; border-left: 3px solid var(--accent); }
+.alt-head { display: flex; gap: 0.5rem; align-items: baseline; flex-wrap: wrap; }
+.alt-profit { margin-left: auto; color: var(--accent-2); font-size: 0.85rem; font-weight: 600; }

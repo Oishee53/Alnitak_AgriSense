@@ -1,0 +1,319 @@
+{
+  "_note": "Fertilizer dose tables in kg/acre for MEDIUM-fertility soil as [low, high] ranges; the tools use the midpoint. Two provenance classes, declared per crop in `provenance`: (1) 'kb-transcribed' — copied from data/knowledge_base/fertilizer_guide.md, which already states doses in kg/acre of product; (2) 'frg-derived' — taken from the crop's own table in BARC FRG-2018 (data/sources/FRG-2018.pdf), which states NUTRIENT kg/ha by soil-analysis class, then converted to product kg/acre using the official nutrient percentages in FRG-2018 Appendix-2 and 1 ha = 2.4711 acre. Each frg-derived crop records its source nutrient row in `frg_nutrient_recommendation_kg_per_ha` so every figure can be checked back to the page cited. Urea/TSP/DAP/MoP prices are REAL official Bangladesh government-fixed dealer prices (Ministry of Agriculture notification, April 2023). Gypsum, zinc, boron, cowdung prices are market estimates and flagged as such.",
+  "_derivation": {
+    "acres_per_hectare": 2.4711,
+    "soil_class_used": "Medium",
+    "why_medium": "FRG-2018 publishes a separate dose row per soil-analysis class (Optimum / Medium / Low / Very low). We use the Medium row because fertilizer_guide.md — the source for the kb-transcribed crops — also states 'per acre for medium-fertility soil', so both provenance classes are on the same basis. A farmer with a real soil test should move up or down a class.",
+    "nutrient_composition_pct": {
+      "_source": "FRG-2018 Appendix-2, Nutrient compositions of fertilizers (p196)",
+      "Urea": { "N": 46 },
+      "TSP": { "P": 20, "S": 1.3, "Ca": 14 },
+      "DAP": { "N": 18, "P": 20 },
+      "MoP": { "K": 50, "_formula": "KCl / potassium chloride" },
+      "Gypsum": { "S": 18, "Ca": 20 },
+      "Zinc sulphate": { "Zn": 36, "S": 17.5, "_formula": "ZnSO4.H2O monohydrate, granular grade" },
+      "Boric acid": { "B": 17 }
+    },
+    "formula": "product_kg_per_acre = (nutrient_kg_per_ha / nutrient_fraction) / 2.4711",
+    "caveat": "FRG-2018 preface: 'Fertilizer recommendations suggested in this guide are not absolute values, rather indicative since they are based on soil test values of wider areas.'"
+  },
+  "prices_bdt_per_kg": {
+    "Urea": { "price": 27, "source": "govt-fixed dealer price (MoA notification Apr-2023) — REAL" },
+    "TSP": { "price": 27, "source": "govt-fixed dealer price (MoA notification Apr-2023) — REAL" },
+    "DAP": { "price": 21, "source": "govt-fixed dealer price (MoA notification Apr-2023) — REAL" },
+    "MoP": { "price": 20, "source": "govt-fixed dealer price (MoA notification Apr-2023) — REAL" },
+    "Gypsum": { "price": 12, "source": "market estimate" },
+    "Zinc sulphate": { "price": 180, "source": "market estimate" },
+    "Boric acid": { "price": 170, "source": "market estimate" },
+    "Cowdung": { "price": 1.2, "source": "market estimate (per kg)" }
+  },
+  "crops": {
+    "T. Aman Rice": {
+      "source": "BARC FRG-2018 via fertilizer_guide.md — T. Aman rice fertilizer dose",
+      "doses_kg_per_acre": {
+        "Urea": [60, 70],
+        "TSP": [20, 25],
+        "MoP": [25, 30],
+        "Gypsum": [15, 15]
+      },
+      "applications": [
+        { "stage": "Basal — final land preparation", "das": 0, "items": { "TSP": 1.0, "MoP": 1.0, "Gypsum": 1.0 }, "note": "apply full TSP, MoP and gypsum at final land preparation" },
+        { "stage": "Urea top-dress 1 — after establishment", "das": 15, "items": { "Urea": 0.3333 }, "note": "15 DAT, after seedling establishment" },
+        { "stage": "Urea top-dress 2 — active tillering", "das": 33, "items": { "Urea": 0.3333 }, "note": "30–35 DAT at active tillering" },
+        { "stage": "Urea top-dress 3 — panicle initiation", "das": 53, "items": { "Urea": 0.3334 }, "note": "50–55 DAT at panicle initiation" }
+      ],
+      "irrigation": [
+        { "das": 0, "event": "Standing water at transplanting", "action": "Transplant into puddled field with thin standing water", "condition": "always" },
+        { "das": 30, "event": "Monsoon-break check", "action": "Mostly rainfed in Kharif-2 — irrigate only if the monsoon breaks for 10+ days and the field cracks", "condition": "if dry spell" },
+        { "das": 100, "event": "Drain field", "action": "Drain 10–15 days before harvest to firm the field", "condition": "always" }
+      ]
+    },
+    "Boro Rice": {
+      "source": "BARC FRG-2018 via fertilizer_guide.md — Boro rice fertilizer dose",
+      "doses_kg_per_acre": {
+        "Urea": [100, 110],
+        "TSP": [35, 40],
+        "MoP": [40, 45],
+        "Gypsum": [25, 25],
+        "Zinc sulphate": [4, 4]
+      },
+      "applications": [
+        { "stage": "Basal — final land preparation", "das": 0, "items": { "TSP": 1.0, "MoP": 1.0, "Gypsum": 1.0, "Zinc sulphate": 1.0 }, "note": "all except urea as basal" },
+        { "stage": "Urea top-dress 1", "das": 20, "items": { "Urea": 0.3333 }, "note": "20 DAT; keep 2–3 cm standing water" },
+        { "stage": "Urea top-dress 2 — maximum tillering", "das": 40, "items": { "Urea": 0.3333 }, "note": "40 DAT at maximum tillering" },
+        { "stage": "Urea top-dress 3 — panicle initiation", "das": 63, "items": { "Urea": 0.3334 }, "note": "60–65 DAT at panicle initiation" }
+      ],
+      "irrigation": [
+        { "das": 0, "event": "Continuous irrigation begins", "action": "Fully irrigated crop (~1000–1200 mm equivalent); maintain 2–3 cm standing water", "condition": "always" },
+        { "das": 75, "event": "Critical — booting to grain fill", "action": "No water stress from booting to grain fill", "condition": "always" },
+        { "das": 125, "event": "Drain field", "action": "Drain before harvest", "condition": "always" }
+      ]
+    },
+    "Maize (Kharif)": {
+      "source": "BARC FRG-2018 via fertilizer_guide.md — Maize fertilizer dose",
+      "doses_kg_per_acre": {
+        "Urea": [100, 110],
+        "TSP": [50, 50],
+        "MoP": [40, 40],
+        "Gypsum": [20, 20],
+        "Zinc sulphate": [4, 4],
+        "Boric acid": [2, 2]
+      },
+      "applications": [
+        { "stage": "Basal — at sowing", "das": 0, "items": { "Urea": 0.3333, "TSP": 1.0, "MoP": 1.0, "Gypsum": 1.0, "Zinc sulphate": 1.0, "Boric acid": 1.0 }, "note": "1/3 urea + all others as basal" },
+        { "stage": "Urea top-dress 1 — knee-high (V8)", "das": 25, "items": { "Urea": 0.3333 }, "note": "~25 DAS at knee-high with earthing-up" },
+        { "stage": "Urea top-dress 2 — before tasseling", "das": 45, "items": { "Urea": 0.3334 }, "note": "~45 DAS before tasseling; earth up after top-dressing to reduce lodging" }
+      ],
+      "irrigation": [
+        { "das": 0, "event": "Drainage furrows", "action": "Sensitive to waterlogging — make drainage furrows every 4 rows in Kharif", "condition": "always" },
+        { "das": 60, "event": "Critical — tasseling-silking", "action": "Irrigate if a dry spell hits at tasseling–silking; stress here costs the most yield", "condition": "if dry spell" }
+      ]
+    },
+    "Potato": {
+      "source": "BARC FRG-2018 via fertilizer_guide.md — Potato fertilizer dose",
+      "doses_kg_per_acre": {
+        "Urea": [90, 100],
+        "TSP": [60, 60],
+        "MoP": [100, 110],
+        "Gypsum": [40, 40],
+        "Zinc sulphate": [4, 4],
+        "Boric acid": [3, 3],
+        "Cowdung": [4000, 4000]
+      },
+      "applications": [
+        { "stage": "Basal — in the ridge at planting", "das": 0, "items": { "Urea": 0.5, "TSP": 1.0, "MoP": 1.0, "Gypsum": 1.0, "Zinc sulphate": 1.0, "Boric acid": 1.0, "Cowdung": 1.0 }, "note": "1/2 urea + everything else in the ridge; potato is potash-hungry" },
+        { "stage": "Urea top-dress — final earthing-up", "das": 32, "items": { "Urea": 0.5 }, "note": "30–35 DAS with final earthing-up; excess urea delays tuberization and softens skin" }
+      ],
+      "irrigation": [
+        { "das": 20, "event": "Irrigation 1 — stolon initiation", "action": "Light irrigation at stolon initiation", "condition": "always" },
+        { "das": 50, "event": "Irrigation 2–3 — tuber bulking", "action": "4–6 light irrigations total during bulking; avoid waterlogging", "condition": "always" },
+        { "das": 80, "event": "Stop irrigation", "action": "Stop 10 days pre-harvest to harden skins", "condition": "always" }
+      ]
+    },
+    "Wheat": {
+      "source": "BARC FRG-2018 via fertilizer_guide.md — Wheat fertilizer dose",
+      "doses_kg_per_acre": {
+        "Urea": [70, 75],
+        "TSP": [35, 35],
+        "MoP": [20, 20],
+        "Gypsum": [25, 25],
+        "Boric acid": [2.5, 2.5]
+      },
+      "applications": [
+        { "stage": "Basal — at sowing", "das": 0, "items": { "Urea": 0.6667, "TSP": 1.0, "MoP": 1.0, "Gypsum": 1.0, "Boric acid": 1.0 }, "note": "2/3 urea + all others at sowing" },
+        { "stage": "Urea top-dress — after CRI irrigation", "das": 22, "items": { "Urea": 0.3333 }, "note": "immediately after the crown-root-initiation irrigation (20–25 DAS); top-dressing on dry soil wastes nitrogen" }
+      ],
+      "irrigation": [
+        { "das": 21, "event": "Irrigation 1 — CRI (most critical)", "action": "Crown root initiation irrigation at 20–25 DAS — the most yield-critical water", "condition": "always" },
+        { "das": 55, "event": "Irrigation 2 — booting", "action": "Booting stage irrigation", "condition": "always" },
+        { "das": 75, "event": "Irrigation 3 — grain fill", "action": "Grain filling irrigation", "condition": "always" }
+      ]
+    },
+    "Mustard": {
+      "source": "BARC FRG-2018 via fertilizer_guide.md — Mustard fertilizer dose",
+      "doses_kg_per_acre": {
+        "Urea": [50, 55],
+        "TSP": [35, 35],
+        "MoP": [15, 15],
+        "Gypsum": [30, 30],
+        "Boric acid": [2, 2],
+        "Zinc sulphate": [2, 2]
+      },
+      "applications": [
+        { "stage": "Basal — at sowing", "das": 0, "items": { "Urea": 0.5, "TSP": 1.0, "MoP": 1.0, "Gypsum": 1.0, "Boric acid": 1.0, "Zinc sulphate": 1.0 }, "note": "1/2 urea + all others; gypsum's sulphur boosts oil %" },
+        { "stage": "Urea top-dress — before flowering", "das": 20, "items": { "Urea": 0.5 }, "note": "18–22 DAS before flowering, ideally with a light irrigation" }
+      ],
+      "irrigation": [
+        { "das": 20, "event": "Light irrigation with top-dress", "action": "One light irrigation with the urea top-dress if soil is dry", "condition": "if dry" },
+        { "das": 45, "event": "Optional — siliqua fill", "action": "One light irrigation at siliqua fill if dry; mustard needs 0–2 irrigations total", "condition": "if dry" }
+      ]
+    },
+    "Jute": {
+      "source": "BARC FRG-2018 via fertilizer_guide.md — Jute fertilizer dose",
+      "doses_kg_per_acre": {
+        "Urea": [40, 45],
+        "TSP": [15, 15],
+        "MoP": [15, 15],
+        "Gypsum": [18, 18]
+      },
+      "applications": [
+        { "stage": "Basal — final land preparation", "das": 0, "items": { "Urea": 0.5, "TSP": 1.0, "MoP": 1.0, "Gypsum": 1.0 }, "note": "1/2 urea + others at final prep" },
+        { "stage": "Urea top-dress — after thinning-weeding", "das": 30, "items": { "Urea": 0.5 }, "note": "30 DAS after thinning-weeding" }
+      ],
+      "irrigation": [
+        { "das": 0, "event": "Establishment", "action": "Pre-monsoon showers establish the crop; usually no irrigation after establishment", "condition": "always" },
+        { "das": 120, "event": "Retting water", "action": "Needs clean slow water for retting 12–15 days at harvest", "condition": "always" }
+      ]
+    },
+    "Brinjal": {
+      "source": "BARC FRG-2018 p102, BRINJAL (Solanum melongena), Medium soil class — data/sources/FRG-2018.pdf",
+      "provenance": "frg-derived",
+      "yield_goal_t_per_ha": 60.0,
+      "frg_nutrient_recommendation_kg_per_ha": { "N": [46, 90], "P": [13, 24], "K": [36, 70], "S": [6, 10], "Zn": [0.0, 1.0], "B": [0.0, 0.5], "OF_t_per_ha": 4 },
+      "doses_kg_per_acre": {
+        "Urea": [40.5, 79.2],
+        "TSP": [26.3, 48.6],
+        "MoP": [29.1, 56.7],
+        "Gypsum": [13.5, 22.5],
+        "Zinc sulphate": [0.0, 1.1],
+        "Boric acid": [0.0, 1.2],
+        "Cowdung": [1618.7, 1618.7]
+      },
+      "applications": [
+        { "stage": "Basal — final land preparation", "das": 0, "items": { "TSP": 1.0, "Gypsum": 1.0, "Zinc sulphate": 1.0, "Boric acid": 1.0, "Cowdung": 1.0 }, "note": "FRG: half the organic fertilizer plus all P, S, Zn and B as basal at final land preparation; the remaining half OF goes into the pits before planting seedlings" },
+        { "stage": "N+K split 1", "das": 20, "items": { "Urea": 0.3333, "MoP": 0.3333 }, "note": "FRG: N and K in three equal splits at 20, 40 and 60 DAT, applied by ring method under moist soil" },
+        { "stage": "N+K split 2", "das": 40, "items": { "Urea": 0.3333, "MoP": 0.3333 }, "note": "second of three equal N+K splits (40 DAT)" },
+        { "stage": "N+K split 3", "das": 60, "items": { "Urea": 0.3334, "MoP": 0.3334 }, "note": "third of three equal N+K splits (60 DAT)" }
+      ],
+      "irrigation": [
+        { "das": 0, "event": "Establish with steady moisture", "action": "Keep steady moisture after transplanting; brinjal tolerates winter and monsoon but needs drainage", "condition": "always" },
+        { "das": 90, "event": "Moisture through the picking season", "action": "Maintain even moisture across the long harvest window; waterlogging invites bacterial wilt", "condition": "always" }
+      ]
+    },
+    "Tomato": {
+      "source": "BARC FRG-2018 p101, TOMATO (Winter), Medium soil class — data/sources/FRG-2018.pdf",
+      "provenance": "frg-derived",
+      "yield_goal_t_per_ha": 75.0,
+      "frg_nutrient_recommendation_kg_per_ha": { "N": [41, 80], "P": [16, 30], "K": [21, 40], "S": [8, 14], "Zn": [0.0, 1.0], "B": [0.0, 0.5], "OF_t_per_ha": 5 },
+      "doses_kg_per_acre": {
+        "Urea": [36.1, 70.4],
+        "TSP": [32.4, 60.7],
+        "MoP": [17.0, 32.4],
+        "Gypsum": [18.0, 31.5],
+        "Zinc sulphate": [0.0, 1.1],
+        "Boric acid": [0.0, 1.2],
+        "Cowdung": [2023.4, 2023.4]
+      },
+      "applications": [
+        { "stage": "Basal — final land preparation", "das": 0, "items": { "TSP": 1.0, "Gypsum": 1.0, "Zinc sulphate": 1.0, "Boric acid": 1.0, "Cowdung": 1.0 }, "note": "FRG: half the organic fertilizer plus all P, S, Zn and B as basal; remaining half OF in the pits before planting seedlings" },
+        { "stage": "N+K split 1", "das": 15, "items": { "Urea": 0.5, "MoP": 0.5 }, "note": "FRG: N and K in two equal splits at 15 and 35 DAT, ring method under moist soil" },
+        { "stage": "N+K split 2", "das": 35, "items": { "Urea": 0.5, "MoP": 0.5 }, "note": "second of two equal N+K splits (35 DAT)" }
+      ],
+      "irrigation": [
+        { "das": 0, "event": "Establish and stake", "action": "Steady moisture after transplanting; stake and space for airflow, never waterlog", "condition": "always" },
+        { "das": 55, "event": "Fruit set and bulking", "action": "Even moisture through fruit set — swings cause cracking and blossom-end rot", "condition": "always" }
+      ]
+    },
+    "Onion": {
+      "source": "BARC FRG-2018 p109, ONION (Allium cepa), Medium soil class — data/sources/FRG-2018.pdf",
+      "provenance": "frg-derived",
+      "yield_goal_t_per_ha": 20.0,
+      "frg_nutrient_recommendation_kg_per_ha": { "N": [36, 70], "P": [16, 30], "K": [31, 60], "S": [11, 20], "Zn": [0.0, 1.5], "B": [0.0, 0.7], "OF_t_per_ha": 3 },
+      "doses_kg_per_acre": {
+        "Urea": [31.7, 61.6],
+        "TSP": [32.4, 60.7],
+        "MoP": [25.1, 48.6],
+        "Gypsum": [24.7, 45.0],
+        "Zinc sulphate": [0.0, 1.7],
+        "Boric acid": [0.0, 1.7],
+        "Cowdung": [1214.0, 1214.0]
+      },
+      "applications": [
+        { "stage": "Basal — final land preparation", "das": 0, "items": { "TSP": 1.0, "Gypsum": 1.0, "Zinc sulphate": 1.0, "Boric acid": 1.0, "Cowdung": 1.0, "Urea": 0.5, "MoP": 0.5 }, "note": "FRG: all OF, P, S, Zn and B plus HALF the N and K as basal at final land preparation" },
+        { "stage": "N+K split 1 — bulb initiation", "das": 25, "items": { "Urea": 0.25, "MoP": 0.25 }, "note": "FRG: remaining N and K in two equal splits at 25 and 50 DAP for bulb production" },
+        { "stage": "N+K split 2", "das": 50, "items": { "Urea": 0.25, "MoP": 0.25 }, "note": "second of the two post-basal splits (50 DAP)" }
+      ],
+      "irrigation": [
+        { "das": 20, "event": "Frequent light irrigation", "action": "Shallow-rooted — irrigate lightly and often; it tolerates neither drought nor waterlogging", "condition": "always" },
+        { "das": 60, "event": "Bulbing", "action": "Light irrigation every 8–10 days through bulb growth", "condition": "always" },
+        { "das": 95, "event": "Stop irrigation", "action": "Stop watering to harden bulbs before harvest, then cure in shade", "condition": "always" }
+      ]
+    },
+    "Garlic": {
+      "source": "BARC FRG-2018 p110, GARLIC (Allium sativum), Medium soil class — data/sources/FRG-2018.pdf",
+      "provenance": "frg-derived",
+      "yield_goal_t_per_ha": 15.0,
+      "frg_nutrient_recommendation_kg_per_ha": { "N": [39, 76], "P": [17, 32], "K": [31, 60], "S": [11, 20], "Zn": [1.1, 2.0], "B": [1.1, 2.0], "OF_t_per_ha": 3 },
+      "doses_kg_per_acre": {
+        "Urea": [34.3, 66.9],
+        "TSP": [34.4, 64.7],
+        "MoP": [25.1, 48.6],
+        "Gypsum": [24.7, 45.0],
+        "Zinc sulphate": [1.2, 2.2],
+        "Boric acid": [2.6, 4.8],
+        "Cowdung": [1214.0, 1214.0]
+      },
+      "applications": [
+        { "stage": "Basal — final land preparation", "das": 0, "items": { "TSP": 1.0, "Gypsum": 1.0, "Zinc sulphate": 1.0, "Boric acid": 1.0, "Cowdung": 1.0, "Urea": 0.5, "MoP": 0.5 }, "note": "FRG: all OF, P, S, Zn and B plus HALF the N and K as basal at final land preparation" },
+        { "stage": "N+K top-dress at first mulching", "das": 35, "items": { "Urea": 0.5, "MoP": 0.5 }, "note": "FRG: remaining N and K at the time of first mulching, under moist soil, mixed in promptly" }
+      ],
+      "irrigation": [
+        { "das": 5, "event": "Straw mulch", "action": "Mulch with straw to hold moisture and suppress weeds", "condition": "always" },
+        { "das": 60, "event": "Bulb growth", "action": "Light irrigation every 10–12 days during bulb growth", "condition": "always" },
+        { "das": 125, "event": "Stop irrigation", "action": "Stop watering to mature the bulbs before lifting", "condition": "always" }
+      ]
+    },
+    "Chili": {
+      "source": "BARC FRG-2018 p112, CHILLI (Capsicum annuum), Medium soil class — data/sources/FRG-2018.pdf",
+      "provenance": "frg-derived",
+      "yield_goal_t_per_ha": 2.5,
+      "frg_nutrient_recommendation_kg_per_ha": { "N": [33, 64], "P": [16, 30], "K": [26, 50], "S": [6, 10], "Zn": [0.6, 1.0], "B": [0.0, 0.7], "OF_t_per_ha": 3, "_yield_basis": "2.5 t/ha DRY chilli" },
+      "doses_kg_per_acre": {
+        "Urea": [29.0, 56.3],
+        "TSP": [32.4, 60.7],
+        "MoP": [21.0, 40.5],
+        "Gypsum": [13.5, 22.5],
+        "Zinc sulphate": [0.7, 1.1],
+        "Boric acid": [0.0, 1.7],
+        "Cowdung": [1214.0, 1214.0]
+      },
+      "applications": [
+        { "stage": "Basal — final land preparation", "das": 0, "items": { "TSP": 1.0, "MoP": 1.0, "Gypsum": 1.0, "Zinc sulphate": 1.0, "Boric acid": 1.0, "Cowdung": 1.0, "Urea": 0.5 }, "note": "FRG: all OF, P, K, S, Zn and B plus HALF the N as basal — note chilli takes ALL the potash basal, unlike brinjal and tomato" },
+        { "stage": "Urea split 1", "das": 25, "items": { "Urea": 0.1667 }, "note": "FRG: remaining N in three equal splits at 25, 50 and 70 DAP under moist soil" },
+        { "stage": "Urea split 2", "das": 50, "items": { "Urea": 0.1667 }, "note": "second of three equal N splits (50 DAP)" },
+        { "stage": "Urea split 3", "das": 70, "items": { "Urea": 0.1666 }, "note": "third of three equal N splits (70 DAP)" }
+      ],
+      "irrigation": [
+        { "das": 0, "event": "Drainage first", "action": "Plant on ridges or beds — chilli is very sensitive to waterlogging", "condition": "always" },
+        { "das": 60, "event": "Steady moisture at fruiting", "action": "Keep moisture even from flowering through fruiting; wet foliage in humid spells invites anthracnose", "condition": "always" }
+      ]
+    }
+  },
+  "soil_adjustments": {
+    "sandy": {
+      "rule": "split nitrogen into more, smaller doses (leaching loss) and add 25% extra MoP",
+      "mop_multiplier": 1.25,
+      "extra_urea_split": true,
+      "source": "fertilizer_guide.md — Soil-type adjustments"
+    },
+    "clay": {
+      "rule": "full basal doses are safe; drainage matters more than dose",
+      "source": "fertilizer_guide.md — Soil-type adjustments"
+    },
+    "saline": {
+      "rule": "use gypsum, avoid MoP over-dose",
+      "source": "fertilizer_guide.md — Soil-type adjustments"
+    }
+  },
+  "organic_rule": {
+    "rule": "where cowdung/compost 2 t/acre is used, cut urea and TSP by about 20%",
+    "urea_tsp_multiplier": 0.8,
+    "cowdung_kg_per_acre": 2000,
+    "source": "fertilizer_guide.md — Soil-type adjustments"
+  },
+  "weather_rules": [
+    "Never top-dress urea within 48 hours before forecast heavy rain (>20 mm) — nitrogen washes away (30–40% loss).",
+    "Do not apply urea on drought-stressed dry soil — irrigate first, then apply.",
+    "Apply gypsum and zinc only as basal; they do not work as top-dressing."
+  ]
+}

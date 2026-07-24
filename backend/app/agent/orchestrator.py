@@ -29,6 +29,9 @@ _ARTIFACT_SLOTS = {
     "recommend_crops": "crop_options",
     "build_season_plan": "season_plan",
     "compute_financials": "financials",
+    "build_fertilizer_schedule": "fertilizer_schedule",
+    "assess_pest_risk": "pest_risk",
+    "simulate_scenario": "scenario",
 }
 
 _REQUIRED_FIELDS = {
@@ -54,6 +57,28 @@ _PROFILE_BACKFILL: dict[str, dict[str, str]] = {
     },
     "build_season_plan": {"soil_type": "soil_type"},
     "compute_financials": {"farm_size_acres": "farm_size_acres"},
+    "build_fertilizer_schedule": {
+        "soil_type": "soil_type",
+        "farm_size_acres": "farm_size_acres",
+    },
+    "assess_pest_risk": {"farm_size_acres": "farm_size_acres"},
+    "simulate_scenario": {
+        "farm_size_acres": "farm_size_acres",
+        "water_availability": "water_availability",
+        "soil_type": "soil_type",
+        "season": "target_season",
+    },
+}
+
+
+# Tools whose advice should be grounded in the live forecast. If the model
+# calls one after get_weather but forgets to pass the weather through, the
+# orchestrator injects the real result rather than letting the tool fall back to
+# a stage-only (ungrounded) answer.
+_WEATHER_CONSUMERS = {
+    "assess_pest_risk": ("weather_summary", "daily_weather"),
+    "build_fertilizer_schedule": ("weather_summary", "daily_weather"),
+    "recommend_crops": ("weather_summary", None),
 }
 
 
@@ -168,6 +193,34 @@ class Orchestrator:
             ),
         )
 
+    @staticmethod
+    def _inject_weather(
+        tool: str, params: dict[str, Any], last_weather: dict[str, Any] | None
+    ) -> list[str]:
+        """Attach the real get_weather result to weather-consuming tools.
+
+        These params are not advertised in the tool schemas, so a well-behaved
+        model never sends them — but models have been observed inventing a
+        plausible-looking forecast anyway. Anything the model supplies here is
+        therefore DISCARDED and replaced with the real call's values (or dropped
+        entirely if we have no real forecast yet). Returns the param names set,
+        so the trace shows where the grounding came from.
+        """
+        spec = _WEATHER_CONSUMERS.get(tool)
+        if not spec:
+            return []
+
+        injected: list[str] = []
+        for key, source in zip(spec, ("summary", "daily")):
+            if key is None:
+                continue
+            params.pop(key, None)  # never trust a model-supplied forecast
+            value = (last_weather or {}).get(source)
+            if value:
+                params[key] = value
+                injected.append(key)
+        return injected
+
     def _backfill_profile(self, state: SessionState, tool: str, params: dict[str, Any]) -> None:
         """If the LLM passed farm facts directly into a tool (skipping
         update_farm_profile), capture them into the persistent profile so the
@@ -194,6 +247,8 @@ class Orchestrator:
         # Dedupe cache: identical tool call (name + params) within one turn
         # reuses the first result instead of re-executing.
         called_cache: dict[str, Any] = {}
+        # Last real get_weather result, reused to ground later tool calls.
+        last_weather: dict[str, Any] | None = state.artifacts.get("weather")
 
         for _ in range(MAX_STEPS):
             system = build_system_prompt(state.profile, state.missing_fields())
@@ -215,7 +270,17 @@ class Orchestrator:
             conversation.append(resp["assistant_message"])
 
             for call in tool_calls:
+                injected = self._inject_weather(call["name"], call["input"], last_weather)
                 trace_mod.record(sid, "tool_call", tool=call["name"], params=call["input"])
+                if injected:
+                    trace_mod.record(
+                        sid,
+                        "thought",
+                        summary=(
+                            f"grounding {call['name']} in the live forecast: filled in "
+                            f"{', '.join(injected)} from this session's get_weather result"
+                        ),
+                    )
                 self._backfill_profile(state, call["name"], call["input"])
                 cache_key = call["name"] + "::" + _dump(
                     dict(sorted(call["input"].items()))
@@ -248,6 +313,16 @@ class Orchestrator:
                 if slot and isinstance(result, dict) and "error" not in result:
                     state.artifacts[slot] = result
 
+                # Remember the live forecast so later tools this turn — and in
+                # later turns — can be grounded in it.
+                if (
+                    call["name"] == "get_weather"
+                    and isinstance(result, dict)
+                    and "error" not in result
+                ):
+                    last_weather = result
+                    state.artifacts["weather"] = result
+
                 conversation.append(
                     {
                         "role": "tool",
@@ -272,6 +347,9 @@ class Orchestrator:
             crop_options=arts.get("crop_options"),
             season_plan=arts.get("season_plan"),
             financials=arts.get("financials"),
+            fertilizer_schedule=arts.get("fertilizer_schedule"),
+            pest_risk=arts.get("pest_risk"),
+            scenario=arts.get("scenario"),
         )
 
     @staticmethod
@@ -302,6 +380,33 @@ class Orchestrator:
             if tool == "update_farm_profile":
                 miss = result.get("still_missing", [])
                 return "profile updated; missing: " + (", ".join(miss) if miss else "none")
+            if tool == "build_fertilizer_schedule":
+                alerts = sum(
+                    1 for s in result.get("fertilizer_schedule", []) if "weather_alert" in s
+                )
+                cost = result.get("total_fertilizer_cost_bdt")
+                # cost is None for crops with no published dose table
+                cost_txt = f"{cost:,} BDT total" if cost is not None else "timing only (no published doses)"
+                return (
+                    f"{result.get('crop')}: {len(result.get('fertilizer_schedule', []))} applications + "
+                    f"{len(result.get('irrigation_schedule', []))} irrigations, {cost_txt}"
+                    + (f" — {alerts} rain-delay alert(s)" if alerts else "")
+                )
+            if tool == "assess_pest_risk":
+                active = result.get("active_risks", [])
+                high = [r["name"] for r in active if r.get("risk") == "high"]
+                return (
+                    f"{result.get('crop')} at {result.get('days_after_sowing')} DAS: "
+                    f"{len(active)} active risk(s)"
+                    + (f"; HIGH: {', '.join(high)}" if high else "")
+                )
+            if tool == "simulate_scenario":
+                return (
+                    f"{result.get('crop')} {result.get('scenario_applied')}: net profit "
+                    f"{result.get('baseline', {}).get('net_profit_bdt', 0):,} → "
+                    f"{result.get('scenario', {}).get('net_profit_bdt', 0):,} BDT "
+                    f"({result.get('net_profit_change_bdt', 0):+,.0f})"
+                )
         if isinstance(result, list):
             return f"{len(result)} result(s)"
         return str(result)[:120]

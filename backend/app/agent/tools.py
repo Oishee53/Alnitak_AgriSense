@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Optional
 
 from app.rag import retriever
-from app.tools import crops, finance, season_plan, weather
+from app.tools import crops, fertilizer, finance, pests, scenario, season_plan, weather
 
 
 @dataclass
@@ -22,6 +22,11 @@ class Tool:
     description: str
     input_schema: dict[str, Any]
     handler: Optional[Callable[..., Awaitable[Any]]]
+    # Params the ORCHESTRATOR may supply but the LLM must never pass — live
+    # weather, chiefly. Deliberately absent from input_schema: a model that
+    # can't see the field can't invent a forecast for it, and the orchestrator
+    # fills in the real get_weather values instead.
+    internal_params: tuple[str, ...] = ()
 
     def to_schema(self) -> dict[str, Any]:
         return {
@@ -29,6 +34,9 @@ class Tool:
             "description": self.description,
             "input_schema": self.input_schema,
         }
+
+    def accepts(self) -> set[str]:
+        return set(self.input_schema.get("properties", {}).keys()) | set(self.internal_params)
 
 
 TOOLS: dict[str, Tool] = {
@@ -89,7 +97,6 @@ TOOLS: dict[str, Tool] = {
                 "soil_type": {"type": "string"},
                 "season": {"type": "string"},
                 "water_availability": {"type": "string"},
-                "weather_summary": {"type": "object", "description": "the `summary` object returned by get_weather"},
                 "budget_bdt": {"type": "number"},
                 "farm_size_acres": {"type": "number"},
                 "priority": {
@@ -101,6 +108,7 @@ TOOLS: dict[str, Tool] = {
             "required": ["soil_type", "season"],
         },
         handler=crops.recommend_crops,
+        internal_params=("weather_summary",),
     ),
     "build_season_plan": Tool(
         name="build_season_plan",
@@ -152,13 +160,107 @@ TOOLS: dict[str, Tool] = {
         },
         handler=finance.compute_financials,
     ),
+    "build_fertilizer_schedule": Tool(
+        name="build_fertilizer_schedule",
+        description=(
+            "Stage-by-stage fertilizer AND irrigation schedule for the chosen "
+            "crop: exact kg of urea/TSP/MoP/gypsum/zinc per application, the date "
+            "of each, the cost of each line, and organic alternatives. Doses come "
+            "from the KB (BARC FRG-2018). Call get_weather FIRST — the live "
+            "forecast is attached automatically so the tool can flag urea "
+            "top-dressings that fall within 48h of heavy rain. Set "
+            "use_organic=true if the farmer wants an organic/cowdung-based "
+            "option. Use these numbers verbatim."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "crop": {"type": "string"},
+                "soil_type": {"type": "string"},
+                "farm_size_acres": {"type": "number"},
+                "sowing_date": {"type": "string", "description": "ISO date; omit to use the recommended window"},
+                "use_organic": {
+                    "type": "boolean",
+                    "description": "true if the farmer asked for organic/cowdung alternatives",
+                },
+            },
+            "required": ["crop", "soil_type", "farm_size_acres"],
+        },
+        handler=fertilizer.build_fertilizer_schedule,
+        internal_params=("weather_summary", "daily_weather"),
+    ),
+    "assess_pest_risk": Tool(
+        name="assess_pest_risk",
+        description=(
+            "Predict the pests and diseases most likely to hit this crop RIGHT "
+            "NOW, based on its growth stage and the live forecast. Returns each "
+            "risk with symptom, scouting threshold, prevention steps, treatment, "
+            "and estimated cost per acre — grounded in the KB IPM/plant-protection "
+            "guides. Pass growth_stage (or days_after_sowing / sowing_date). "
+            "Call get_weather FIRST — the live forecast is attached "
+            "automatically, so risk levels reflect real conditions instead of a "
+            "generic seasonal guess."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "crop": {"type": "string"},
+                "growth_stage": {
+                    "type": "string",
+                    "description": "e.g. seedling, tillering, vegetative, flowering, fruiting, harvest",
+                },
+                "days_after_sowing": {"type": "integer", "description": "DAS, if known precisely"},
+                "sowing_date": {"type": "string", "description": "ISO sowing date — DAS is computed from it"},
+                "farm_size_acres": {"type": "number"},
+            },
+            "required": ["crop"],
+        },
+        handler=pests.assess_pest_risk,
+        internal_params=("weather_summary", "daily_weather"),
+    ),
+    "simulate_scenario": Tool(
+        name="simulate_scenario",
+        description=(
+            "Answer a what-if question with REAL recomputed numbers: 'what if "
+            "rainfall drops 30%?', 'what if my budget is cut 40%?', 'what if the "
+            "price falls 15%?'. Re-runs the finance engine with the perturbed "
+            "input and returns baseline vs scenario side by side with every delta, "
+            "plus alternative crops if the change makes this crop unviable. "
+            "Percentages are SIGNED: a 30% drop is rainfall_pct=-30. Always use "
+            "this for hypotheticals — never estimate the effect yourself."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "crop": {"type": "string"},
+                "farm_size_acres": {"type": "number"},
+                "rainfall_pct": {"type": "number", "description": "signed % change in rainfall, e.g. -30"},
+                "budget_pct": {"type": "number", "description": "signed % change in budget, e.g. -40"},
+                "new_budget_bdt": {"type": "number", "description": "absolute new budget, if the farmer states one"},
+                "price_pct": {"type": "number", "description": "signed % change in selling price"},
+                "yield_pct": {"type": "number", "description": "signed % change in yield"},
+                "cost_pct": {"type": "number", "description": "signed % change in input costs"},
+                "water_availability": {"type": "string", "description": "from the profile — buffers rainfall shocks"},
+                "soil_type": {"type": "string"},
+                "season": {"type": "string"},
+            },
+            "required": ["crop", "farm_size_acres"],
+        },
+        handler=scenario.simulate,
+    ),
     "search_knowledge_base": Tool(
         name="search_knowledge_base",
         description=(
-            "Retrieve grounded agronomic facts (crop calendars, fertilizer doses, "
-            "soil suitability, pest management) from the local knowledge base "
-            "built from public BRRI/BARC/DAE extension materials. Use this for "
-            "any agronomy question instead of answering from memory."
+            "FALLBACK knowledge lookup: retrieve grounded agronomic facts from the "
+            "local knowledge base (public BRRI/BARC/DAE extension materials) for "
+            "questions no specialised tool covers — varieties, spacing, seed rate, "
+            "storage, general practice. "
+            "Do NOT use this for fertilizer doses/timing (use "
+            "build_fertilizer_schedule), pest or disease risk (use "
+            "assess_pest_risk), what-if questions (use simulate_scenario), crop "
+            "choice (use recommend_crops), the calendar (use build_season_plan), "
+            "or money (use compute_financials) — those tools return exact, costed, "
+            "dated numbers, while this returns only prose to read."
         ),
         input_schema={
             "type": "object",
@@ -185,6 +287,6 @@ async def dispatch(name: str, params: dict[str, Any]) -> Any:
     tool = TOOLS[name]
     if tool.handler is None:
         raise RuntimeError(f"Tool {name} must be handled by the orchestrator")
-    allowed = set(tool.input_schema.get("properties", {}).keys())
+    allowed = tool.accepts()
     clean = {k: v for k, v in params.items() if k in allowed}
     return await tool.handler(**clean)

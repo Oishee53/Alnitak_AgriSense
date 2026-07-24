@@ -5,6 +5,9 @@ import ProfileCard from "./components/ProfileCard.jsx";
 import CropOptions from "./components/CropOptions.jsx";
 import PlanView from "./components/PlanView.jsx";
 import FinanceTable from "./components/FinanceTable.jsx";
+import FertilizerView from "./components/FertilizerView.jsx";
+import PestRiskView from "./components/PestRiskView.jsx";
+import ScenarioView from "./components/ScenarioView.jsx";
 import { sendChat, getSession, getTrace } from "./lib/api.js";
 
 const LS_KEY = "agrisense_session_id";
@@ -22,8 +25,12 @@ export default function App() {
   const [crops, setCrops] = useState(null);
   const [plan, setPlan] = useState(null);
   const [financials, setFinancials] = useState(null);
+  const [fertilizer, setFertilizer] = useState(null);
+  const [pestRisk, setPestRisk] = useState(null);
+  const [scenario, setScenario] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [tab, setTab] = useState(null); // 'crops' | 'calendar' | 'finance'
+  // 'crops' | 'calendar' | 'finance' | 'fertilizer' | 'pests' | 'scenario'
+  const [tab, setTab] = useState(null);
 
   // Rehydrate a prior session on load (persistent memory across refreshes).
   useEffect(() => {
@@ -36,6 +43,9 @@ export default function App() {
         setCrops(snap.crop_options);
         setPlan(snap.season_plan);
         setFinancials(snap.financials);
+        setFertilizer(snap.fertilizer_schedule);
+        setPestRisk(snap.pest_risk);
+        setScenario(snap.scenario);
         if (snap.season_plan) setTab("calendar");
         else if (snap.crop_options) setTab("crops");
         const t = await getTrace(sessionId);
@@ -55,9 +65,16 @@ export default function App() {
     if (res.crop_options) setCrops(res.crop_options);
     if (res.season_plan) setPlan(res.season_plan);
     if (res.financials) setFinancials(res.financials);
+    if (res.fertilizer_schedule) setFertilizer(res.fertilizer_schedule);
+    if (res.pest_risk) setPestRisk(res.pest_risk);
+    if (res.scenario) setScenario(res.scenario);
     if (res.trace?.length) setTrace((t) => [...t, ...res.trace]);
     // Auto-focus the newest artifact so the user never has to hunt for it.
-    if (res.season_plan) setTab("calendar");
+    // Tier-1 answers are what the farmer just asked for, so they win the focus.
+    if (res.scenario) setTab("scenario");
+    else if (res.pest_risk) setTab("pests");
+    else if (res.fertilizer_schedule) setTab("fertilizer");
+    else if (res.season_plan) setTab("calendar");
     else if (res.crop_options) setTab("crops");
   }
 
@@ -88,22 +105,29 @@ export default function App() {
     setCrops(null);
     setPlan(null);
     setFinancials(null);
+    setFertilizer(null);
+    setPestRisk(null);
+    setScenario(null);
     setTab(null);
   }
 
   // Which output panel to show: the selected tab if it still has data,
-  // otherwise the most advanced artifact available.
-  const has = { crops: !!crops, calendar: !!plan, finance: !!financials };
+  // otherwise the most advanced artifact available. Order here is the
+  // fallback priority.
+  const TABS = [
+    { key: "crops", label: "🌱 Crop options", data: crops },
+    { key: "calendar", label: "📅 Season calendar", data: plan },
+    { key: "finance", label: "💰 Finance", data: financials },
+    { key: "fertilizer", label: "🧪 Fertilizer", data: fertilizer },
+    { key: "pests", label: "🐛 Pest risk", data: pestRisk },
+    { key: "scenario", label: "🔮 What-if", data: scenario },
+  ];
+  const available = TABS.filter((t) => !!t.data);
+  const fallbackOrder = ["scenario", "pests", "fertilizer", "calendar", "crops", "finance"];
   const effectiveTab =
-    tab && has[tab]
-      ? tab
-      : has.calendar
-      ? "calendar"
-      : has.crops
-      ? "crops"
-      : has.finance
-      ? "finance"
-      : null;
+    available.find((t) => t.key === tab)?.key ??
+    fallbackOrder.find((k) => available.some((t) => t.key === k)) ??
+    null;
 
   return (
     <div className="app">
@@ -122,30 +146,15 @@ export default function App() {
 
           {effectiveTab && (
             <div className="tab-bar">
-              {has.crops && (
+              {available.map((t) => (
                 <button
-                  className={effectiveTab === "crops" ? "active" : ""}
-                  onClick={() => setTab("crops")}
+                  key={t.key}
+                  className={effectiveTab === t.key ? "active" : ""}
+                  onClick={() => setTab(t.key)}
                 >
-                  🌱 Crop options
+                  {t.label}
                 </button>
-              )}
-              {has.calendar && (
-                <button
-                  className={effectiveTab === "calendar" ? "active" : ""}
-                  onClick={() => setTab("calendar")}
-                >
-                  📅 Season calendar
-                </button>
-              )}
-              {has.finance && (
-                <button
-                  className={effectiveTab === "finance" ? "active" : ""}
-                  onClick={() => setTab("finance")}
-                >
-                  💰 Finance
-                </button>
-              )}
+              ))}
             </div>
           )}
 
@@ -170,6 +179,9 @@ export default function App() {
           )}
           {effectiveTab === "calendar" && <PlanView plan={plan} />}
           {effectiveTab === "finance" && <FinanceTable financials={financials} />}
+          {effectiveTab === "fertilizer" && <FertilizerView schedule={fertilizer} />}
+          {effectiveTab === "pests" && <PestRiskView risk={pestRisk} />}
+          {effectiveTab === "scenario" && <ScenarioView scenario={scenario} />}
         </section>
 
         <aside className="right">

@@ -85,4 +85,7 @@ def load_session_snapshot(session_id: str) -> ChatResponse:
         crop_options=arts.get("crop_options"),
         season_plan=arts.get("season_plan"),
         financials=arts.get("financials"),
+        fertilizer_schedule=arts.get("fertilizer_schedule"),
+        pest_risk=arts.get("pest_risk"),
+        scenario=arts.get("scenario"),
     )

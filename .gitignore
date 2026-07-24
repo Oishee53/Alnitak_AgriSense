@@ -15,6 +15,10 @@ backend/data/*.db
 backend/data/*.sqlite3
 *.log
 
+# Primary source PDFs are large (FRG-2018 alone is ~43 MB) — keep the folder's
+# README, which says where to download them and which pages we used.
+backend/data/sources/*.pdf
+
 # ---- Node / frontend ----
 node_modules/
 frontend/dist/

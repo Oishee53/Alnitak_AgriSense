@@ -1,0 +1,569 @@
+{
+  "_note": "Pest & disease reference transcribed from data/knowledge_base/pest_disease_reference.md and the per-crop risk notes in the KB crop guides (DAE IPM leaflets, BRRI/BARI plant protection guides — public extension materials). `das_window` is the days-after-sowing/transplanting range when the pest is a live threat. `weather_triggers` encode the KB's weather-pest rules. Treatment costs are the BDT/acre figures stated in the KB where given, otherwise flagged as estimates.",
+  "crops": {
+    "T. Aman Rice": [
+      {
+        "name": "Stem borer",
+        "type": "pest",
+        "das_window": [30, 90],
+        "symptom": "Dead-hearts at tillering, white-heads at heading",
+        "threshold": "10% dead-hearts",
+        "peak": "Aman season August–October",
+        "prevention": [
+          "Clip seedling tips before transplanting",
+          "Install bird perches over the field",
+          "Light traps to catch moths"
+        ],
+        "treatment": "Carbofuran or chlorantraniliprole granules",
+        "cost_bdt_per_acre": [600, 900],
+        "cost_basis": "KB-stated: roughly 600–900 BDT/acre per application",
+        "weather_triggers": [],
+        "source": "pest_disease_reference.md — Rice stem borer"
+      },
+      {
+        "name": "Brown planthopper (BPH)",
+        "type": "pest",
+        "das_window": [45, 100],
+        "symptom": "Hopper-burn patches spreading from the field centre",
+        "threshold": "Scout base of hills weekly after 45 DAT",
+        "peak": "Late season",
+        "prevention": [
+          "Avoid excess urea (dense canopy favours BPH)",
+          "Avoid continuous standing water",
+          "Do not spray broad-spectrum insecticide — it kills spiders, BPH's natural enemy"
+        ],
+        "treatment": "Drain the field, then spray pymetrozine",
+        "cost_bdt_per_acre": [700, 1000],
+        "cost_basis": "estimate — KB gives no figure for this treatment",
+        "weather_triggers": [
+          { "when": "standing_water", "raises_to": "high", "because": "dense canopy + excess urea + standing water favours BPH" }
+        ],
+        "source": "pest_disease_reference.md — Rice brown planthopper"
+      },
+      {
+        "name": "Bacterial leaf blight (BLB)",
+        "type": "disease",
+        "das_window": [40, 95],
+        "symptom": "Yellow wavy leaf edges, appearing after storms",
+        "threshold": "Any spread after a storm",
+        "peak": "Aman, post-storm",
+        "prevention": [
+          "Avoid excess urea",
+          "Drain the field",
+          "Use resistant varieties where available"
+        ],
+        "treatment": "No chemical cure — manage by avoiding excess urea and draining",
+        "cost_bdt_per_acre": [0, 0],
+        "cost_basis": "KB-stated: no chemical cure; cost is management only",
+        "weather_triggers": [
+          { "when": "storm_or_heavy_rain", "raises_to": "high", "because": "post-storm Aman fields: expect BLB (KB general weather-pest rule)" }
+        ],
+        "source": "pest_disease_reference.md — Rice blast and BLB"
+      }
+    ],
+    "Boro Rice": [
+      {
+        "name": "Blast",
+        "type": "disease",
+        "das_window": [35, 100],
+        "symptom": "Diamond-shaped lesions on leaves and neck",
+        "threshold": "Spray at first sign",
+        "peak": "Boro February–March",
+        "prevention": [
+          "Avoid BRRI dhan28 in blast-prone years (highly susceptible)",
+          "Avoid excess nitrogen"
+        ],
+        "treatment": "Spray tricyclazole at first sign",
+        "cost_bdt_per_acre": [700, 1000],
+        "cost_basis": "estimate — KB gives no figure for this spray",
+        "weather_triggers": [
+          { "when": "cool_humid", "raises_to": "high", "because": "blast is favoured by cool nights + humid days" }
+        ],
+        "source": "pest_disease_reference.md — Rice blast and BLB"
+      },
+      {
+        "name": "Stem borer",
+        "type": "pest",
+        "das_window": [35, 100],
+        "symptom": "Dead-hearts at tillering, white-heads at heading",
+        "threshold": "10% dead-hearts",
+        "peak": "Tillering onward",
+        "prevention": ["Clip seedling tips before transplanting", "Bird perches", "Light traps"],
+        "treatment": "Carbofuran or chlorantraniliprole granules",
+        "cost_bdt_per_acre": [600, 900],
+        "cost_basis": "KB-stated: roughly 600–900 BDT/acre per application",
+        "weather_triggers": [],
+        "source": "pest_disease_reference.md — Rice stem borer"
+      },
+      {
+        "name": "Brown planthopper (BPH)",
+        "type": "pest",
+        "das_window": [45, 110],
+        "symptom": "Hopper-burn patches from field centre",
+        "threshold": "Scout base of hills weekly after 45 DAT",
+        "peak": "Late season",
+        "prevention": ["Avoid excess urea", "Avoid continuous standing water", "Spare natural enemies"],
+        "treatment": "Drain the field, then spray pymetrozine",
+        "cost_bdt_per_acre": [700, 1000],
+        "cost_basis": "estimate — KB gives no figure",
+        "weather_triggers": [
+          { "when": "standing_water", "raises_to": "high", "because": "dense over-fertilized canopy + standing water favours BPH" }
+        ],
+        "source": "pest_disease_reference.md — Rice brown planthopper"
+      }
+    ],
+    "Aus Rice": [
+      {
+        "name": "Stem borer",
+        "type": "pest",
+        "das_window": [30, 85],
+        "symptom": "Dead-hearts at tillering, white-heads at heading",
+        "threshold": "10% dead-hearts",
+        "peak": "Tillering to heading",
+        "prevention": ["Clip seedling tips", "Bird perches", "Light traps"],
+        "treatment": "Carbofuran or chlorantraniliprole granules",
+        "cost_bdt_per_acre": [600, 900],
+        "cost_basis": "KB-stated: roughly 600–900 BDT/acre per application",
+        "weather_triggers": [],
+        "source": "pest_disease_reference.md — Rice stem borer"
+      },
+      {
+        "name": "Rice bug",
+        "type": "pest",
+        "das_window": [55, 95],
+        "symptom": "Sucked, discoloured and empty grains at milk stage",
+        "threshold": "Scout at flowering/milk stage",
+        "peak": "Grain filling",
+        "prevention": ["Keep bunds weed-free", "Scout at flowering per the crop calendar"],
+        "treatment": "Spot spray only if numbers pass threshold",
+        "cost_bdt_per_acre": [500, 800],
+        "cost_basis": "estimate — crop-profile risk note, no KB figure",
+        "weather_triggers": [],
+        "source": "crop_profiles.json Aus Rice pest checkpoint; DAE crop calendar"
+      }
+    ],
+    "Maize (Kharif)": [
+      {
+        "name": "Fall armyworm (FAW)",
+        "type": "pest",
+        "das_window": [20, 60],
+        "symptom": "Ragged whorl feeding with sawdust-like frass",
+        "threshold": "10% infested plants",
+        "peak": "Scout weekly 20–60 DAS",
+        "prevention": [
+          "Hand-crush egg masses",
+          "Weekly whorl scouting from 20 DAS",
+          "Rotate chemistry to slow resistance"
+        ],
+        "treatment": "Spray spinetoram or emamectin benzoate into the whorls in the evening",
+        "cost_bdt_per_acre": [700, 1000],
+        "cost_basis": "KB-stated: ~700–1000 BDT/acre per spray",
+        "weather_triggers": [],
+        "source": "pest_disease_reference.md — Maize fall armyworm"
+      }
+    ],
+    "Potato": [
+      {
+        "name": "Late blight",
+        "type": "disease",
+        "das_window": [25, 80],
+        "symptom": "Water-soaked leaf lesions with white mould on the under-surface",
+        "threshold": "Can destroy a crop in 5–7 days — act at first lesion",
+        "peak": "Foggy 10–20°C spells (Dec–Jan)",
+        "prevention": [
+          "Prophylactic mancozeb every 7–10 days during fog",
+          "Use healthy certified seed tubers",
+          "Avoid dense over-irrigated canopy"
+        ],
+        "treatment": "At first lesion switch to cymoxanil+mancozeb or dimethomorph; budget 2–4 sprays",
+        "cost_bdt_per_acre": [1600, 3200],
+        "cost_basis": "KB-stated: ~800 BDT/acre per spray × 2–4 sprays",
+        "weather_triggers": [
+          { "when": "cool_humid", "raises_to": "high", "because": "foggy 10–20°C spells drive late blight (KB)" }
+        ],
+        "source": "pest_disease_reference.md — Potato late blight"
+      }
+    ],
+    "Mustard": [
+      {
+        "name": "Aphid",
+        "type": "pest",
+        "das_window": [30, 70],
+        "symptom": "Colonies on shoots and pods",
+        "threshold": "~50 aphids/plant on 10% of plants",
+        "peak": "Cool cloudy weather",
+        "prevention": [
+          "Conserve ladybird beetles — they control early colonies",
+          "Scout inflorescences from 30 DAS"
+        ],
+        "treatment": "Spray malathion only past threshold, in late afternoon to spare pollinating bees",
+        "cost_bdt_per_acre": [400, 700],
+        "cost_basis": "estimate — KB names the spray but gives no figure",
+        "weather_triggers": [
+          { "when": "cool_humid", "raises_to": "high", "because": "prolonged cloudy humid spells drive aphid pressure (KB)" }
+        ],
+        "source": "pest_disease_reference.md — Mustard aphid"
+      }
+    ],
+    "Wheat": [
+      {
+        "name": "Wheat blast",
+        "type": "disease",
+        "das_window": [60, 90],
+        "symptom": "Bleached spikes above the flag leaf",
+        "threshold": "No rescue once spikes bleach — prevention only",
+        "peak": "Warm (>22°C) humid February",
+        "prevention": [
+          "Sow by early December",
+          "Use resistant BARI Gom-33",
+          "One propiconazole spray at heading in risk years"
+        ],
+        "treatment": "Propiconazole at heading — preventive only, no cure after bleaching",
+        "cost_bdt_per_acre": [600, 900],
+        "cost_basis": "estimate — KB names the spray but gives no figure",
+        "weather_triggers": [
+          { "when": "warm_humid", "raises_to": "high", "because": "warm (>22°C) humid February drives wheat blast (KB)" }
+        ],
+        "source": "pest_disease_reference.md — Wheat blast"
+      }
+    ],
+    "Jute": [
+      {
+        "name": "Hairy caterpillar",
+        "type": "pest",
+        "das_window": [30, 50],
+        "symptom": "Gregarious larvae skeletonize the leaves",
+        "threshold": "Outbreak only",
+        "peak": "30–50 DAS",
+        "prevention": ["Collect and destroy egg-mass leaves at 30–50 DAS"],
+        "treatment": "Spray only on an actual outbreak",
+        "cost_bdt_per_acre": [400, 700],
+        "cost_basis": "estimate — KB advises spray only on outbreak, no figure",
+        "weather_triggers": [],
+        "source": "pest_disease_reference.md — Jute hairy caterpillar"
+      }
+    ],
+    "Lentil": [
+      {
+        "name": "Stemphylium blight",
+        "type": "disease",
+        "das_window": [35, 80],
+        "symptom": "Rapidly spreading leaf lesions in foggy cloudy spells",
+        "threshold": "Spray at first spread during fog",
+        "peak": "Foggy cloudy spells",
+        "prevention": ["Use tolerant BARI Masur-6/7/8", "Avoid dense stands"],
+        "treatment": "Spray mancozeb",
+        "cost_bdt_per_acre": [500, 800],
+        "cost_basis": "estimate — KB names mancozeb but gives no figure",
+        "weather_triggers": [
+          { "when": "cool_humid", "raises_to": "high", "because": "foggy cloudy spells drive stemphylium blight (KB)" }
+        ],
+        "source": "pulses_guide.md — Lentil risks"
+      },
+      {
+        "name": "Aphid",
+        "type": "pest",
+        "das_window": [55, 95],
+        "symptom": "Colonies at podding",
+        "threshold": "Scout at podding",
+        "peak": "Podding",
+        "prevention": ["Conserve natural enemies", "Scout from 55 DAS"],
+        "treatment": "Spray only past threshold",
+        "cost_bdt_per_acre": [400, 700],
+        "cost_basis": "estimate — no KB figure",
+        "weather_triggers": [
+          { "when": "cool_humid", "raises_to": "high", "because": "cool cloudy weather favours aphids (KB general rule)" }
+        ],
+        "source": "pulses_guide.md — Lentil risks"
+      }
+    ],
+    "Chickpea": [
+      {
+        "name": "Pod borer (Helicoverpa)",
+        "type": "pest",
+        "das_window": [50, 105],
+        "symptom": "Larvae boring into flowers and pods",
+        "threshold": "Spray only past threshold at flowering/podding",
+        "peak": "Flowering to podding",
+        "prevention": ["Pheromone traps", "Scout at flowering"],
+        "treatment": "Spray at flowering/podding only past threshold",
+        "cost_bdt_per_acre": [600, 900],
+        "cost_basis": "estimate — no KB figure",
+        "weather_triggers": [],
+        "source": "pulses_guide.md — Chickpea risks"
+      },
+      {
+        "name": "Botrytis grey mould",
+        "type": "disease",
+        "das_window": [40, 90],
+        "symptom": "Grey fuzzy mould on stems and flowers in wet years",
+        "threshold": "Act in prolonged cloudy humid spells",
+        "peak": "Wet years",
+        "prevention": ["Avoid dense stands", "Ensure drainage"],
+        "treatment": "Fungicide spray in wet years",
+        "cost_bdt_per_acre": [500, 800],
+        "cost_basis": "estimate — no KB figure",
+        "weather_triggers": [
+          { "when": "cool_humid", "raises_to": "high", "because": "botrytis grey mould appears in wet/humid years (KB)" }
+        ],
+        "source": "pulses_guide.md — Chickpea risks"
+      }
+    ],
+    "Mungbean": [
+      {
+        "name": "Yellow mosaic virus (whitefly-spread)",
+        "type": "disease",
+        "das_window": [15, 50],
+        "symptom": "Bright yellow mosaic mottling on leaves",
+        "threshold": "Rogue infected plants early",
+        "peak": "Whitefly activity period",
+        "prevention": ["Rogue infected plants", "Control whitefly vector early"],
+        "treatment": "No cure for the virus — control the whitefly vector",
+        "cost_bdt_per_acre": [400, 700],
+        "cost_basis": "estimate — no KB figure",
+        "weather_triggers": [],
+        "source": "pulses_guide.md — Mungbean risks"
+      },
+      {
+        "name": "Thrips",
+        "type": "pest",
+        "das_window": [20, 55],
+        "symptom": "Silvered, distorted leaves and flower drop",
+        "threshold": "Scout from 20 DAS",
+        "peak": "Vegetative to flowering",
+        "prevention": ["Scout weekly", "Avoid water stress"],
+        "treatment": "Spray only past threshold",
+        "cost_bdt_per_acre": [400, 700],
+        "cost_basis": "estimate — no KB figure",
+        "weather_triggers": [],
+        "source": "pulses_guide.md — Mungbean risks"
+      }
+    ],
+    "Onion": [
+      {
+        "name": "Purple blotch",
+        "type": "disease",
+        "das_window": [35, 95],
+        "symptom": "Purple-centred leaf lesions",
+        "threshold": "Spray past threshold in humid spells",
+        "peak": "Humid spells",
+        "prevention": ["Ensure drainage on raised beds", "Avoid overhead irrigation late in the day"],
+        "treatment": "Fungicide spray if past threshold",
+        "cost_bdt_per_acre": [600, 900],
+        "cost_basis": "estimate — no KB figure",
+        "weather_triggers": [
+          { "when": "cool_humid", "raises_to": "high", "because": "humid spells drive purple blotch (KB)" }
+        ],
+        "source": "spices_guide.md — Onion risks"
+      },
+      {
+        "name": "Thrips",
+        "type": "pest",
+        "das_window": [30, 90],
+        "symptom": "Silvery streaks on leaves, stunted bulbs",
+        "threshold": "Spray past threshold",
+        "peak": "Bulbing",
+        "prevention": ["Scout from 30 DAS", "Keep beds weed-free"],
+        "treatment": "Spray if past threshold",
+        "cost_bdt_per_acre": [500, 800],
+        "cost_basis": "estimate — no KB figure",
+        "weather_triggers": [],
+        "source": "spices_guide.md — Onion risks"
+      }
+    ],
+    "Garlic": [
+      {
+        "name": "Leaf blight / purple blotch",
+        "type": "disease",
+        "das_window": [60, 125],
+        "symptom": "Leaf lesions spreading in humid weather",
+        "threshold": "Act in humid spells",
+        "peak": "Humid spells",
+        "prevention": ["Straw mulch and good drainage", "Avoid overhead watering late"],
+        "treatment": "Fungicide spray in humid spells",
+        "cost_bdt_per_acre": [600, 900],
+        "cost_basis": "estimate — no KB figure",
+        "weather_triggers": [
+          { "when": "cool_humid", "raises_to": "high", "because": "leaf blight/purple blotch appears in humid spells (KB)" }
+        ],
+        "source": "spices_guide.md — Garlic risks"
+      }
+    ],
+    "Chili": [
+      {
+        "name": "Anthracnose fruit rot",
+        "type": "disease",
+        "das_window": [80, 150],
+        "symptom": "Sunken dark lesions on ripening fruit",
+        "threshold": "Spray in wet weather at fruiting",
+        "peak": "Wet weather during fruiting",
+        "prevention": ["Ridges/beds with good drainage", "Remove infected fruit"],
+        "treatment": "Fungicide spray as needed in wet weather",
+        "cost_bdt_per_acre": [700, 1100],
+        "cost_basis": "estimate — no KB figure",
+        "weather_triggers": [
+          { "when": "storm_or_heavy_rain", "raises_to": "high", "because": "anthracnose fruit rot spreads in wet weather (KB)" },
+          { "when": "cool_humid", "raises_to": "high", "because": "humid spells favour anthracnose (KB)" }
+        ],
+        "source": "spices_guide.md — Chili risks"
+      },
+      {
+        "name": "Thrips / mite leaf curl",
+        "type": "pest",
+        "das_window": [30, 120],
+        "symptom": "Leaves cup and curl upward or downward",
+        "threshold": "Spray if leaves cup/curl",
+        "peak": "Vegetative through fruiting",
+        "prevention": ["Scout from 30 DAS", "Avoid water stress"],
+        "treatment": "Miticide/insecticide spray when curling appears",
+        "cost_bdt_per_acre": [600, 900],
+        "cost_basis": "estimate — no KB figure",
+        "weather_triggers": [],
+        "source": "spices_guide.md — Chili risks"
+      }
+    ],
+    "Tomato": [
+      {
+        "name": "Late blight",
+        "type": "disease",
+        "das_window": [40, 100],
+        "symptom": "Water-soaked lesions spreading fast in fog",
+        "threshold": "Prophylactic spraying during fog",
+        "peak": "Foggy weather",
+        "prevention": ["Prophylactic mancozeb in fog", "Staking and spacing for airflow"],
+        "treatment": "Mancozeb, then systemic fungicide at first lesion",
+        "cost_bdt_per_acre": [1600, 3200],
+        "cost_basis": "estimate — parallels the KB potato late-blight spray programme",
+        "weather_triggers": [
+          { "when": "cool_humid", "raises_to": "high", "because": "foggy humid weather drives late blight (KB)" }
+        ],
+        "source": "vegetables_guide.md — Tomato risks"
+      },
+      {
+        "name": "Whitefly / leaf curl virus (TYLCV)",
+        "type": "disease",
+        "das_window": [15, 70],
+        "symptom": "Upward-curling, stunted leaves; whiteflies on the underside",
+        "threshold": "Control the vector early",
+        "peak": "Early vegetative",
+        "prevention": ["Pheromone/yellow sticky traps", "Rogue infected plants early"],
+        "treatment": "No cure for the virus — control the whitefly vector",
+        "cost_bdt_per_acre": [600, 900],
+        "cost_basis": "estimate — no KB figure",
+        "weather_triggers": [],
+        "source": "vegetables_guide.md — Tomato risks"
+      },
+      {
+        "name": "Fruit borer",
+        "type": "pest",
+        "das_window": [50, 120],
+        "symptom": "Bore holes in fruit",
+        "threshold": "Trap catches rising",
+        "peak": "Fruiting",
+        "prevention": ["Pheromone traps", "Remove and destroy bored fruit"],
+        "treatment": "Spray past threshold at fruiting",
+        "cost_bdt_per_acre": [600, 900],
+        "cost_basis": "estimate — no KB figure",
+        "weather_triggers": [],
+        "source": "vegetables_guide.md — Tomato risks"
+      }
+    ],
+    "Brinjal": [
+      {
+        "name": "Brinjal shoot & fruit borer",
+        "type": "pest",
+        "das_window": [30, 150],
+        "symptom": "Wilting shoot tips and bored fruit",
+        "threshold": "Clip infested shoots weekly through the harvest",
+        "peak": "Whole harvest period — the dominant pest",
+        "prevention": [
+          "Pheromone traps",
+          "Weekly clipping and destruction of infested shoots",
+          "Plant Bt brinjal lines where available — cuts pesticide sharply"
+        ],
+        "treatment": "IPM first; without IPM this drives very heavy pesticide use",
+        "cost_bdt_per_acre": [1500, 3000],
+        "cost_basis": "estimate — KB states heavy pesticide use without IPM/Bt, no figure given",
+        "weather_triggers": [],
+        "source": "vegetables_guide.md — Brinjal risks; DAE IPM leaflet"
+      },
+      {
+        "name": "Bacterial wilt",
+        "type": "disease",
+        "das_window": [20, 120],
+        "symptom": "Sudden wilting of healthy-looking plants",
+        "threshold": "Rogue affected plants immediately",
+        "peak": "Waterlogged soil",
+        "prevention": ["Ensure drainage — the KB names waterlogged soil as the trigger", "Crop rotation"],
+        "treatment": "No chemical cure — rogue plants and improve drainage",
+        "cost_bdt_per_acre": [0, 0],
+        "cost_basis": "KB-implied: management only, no chemical cure",
+        "weather_triggers": [
+          { "when": "storm_or_heavy_rain", "raises_to": "high", "because": "bacterial wilt takes hold in waterlogged soil (KB)" },
+          { "when": "standing_water", "raises_to": "high", "because": "bacterial wilt takes hold in waterlogged soil (KB)" }
+        ],
+        "source": "vegetables_guide.md — Brinjal risks"
+      }
+    ],
+    "Groundnut": [
+      {
+        "name": "Tikka leaf spot",
+        "type": "disease",
+        "das_window": [45, 110],
+        "symptom": "Dark leaf spots spreading in humid weather",
+        "threshold": "Spray if spotting spreads",
+        "peak": "Humid weather",
+        "prevention": ["Crop rotation", "Scout from 45 DAS"],
+        "treatment": "Fungicide spray if spotting spreads",
+        "cost_bdt_per_acre": [500, 800],
+        "cost_basis": "estimate — no KB figure",
+        "weather_triggers": [
+          { "when": "cool_humid", "raises_to": "high", "because": "tikka leaf spot spreads in humid weather (KB)" }
+        ],
+        "source": "other_crops_guide.md — Groundnut risks"
+      }
+    ],
+    "Sugarcane": [
+      {
+        "name": "Stem / top borer",
+        "type": "pest",
+        "das_window": [60, 300],
+        "symptom": "Dead-hearts in young canes; bored top shoots",
+        "threshold": "Remove dead-hearts on sight",
+        "peak": "Through the long season",
+        "prevention": ["Remove dead-hearts", "Release Trichogramma parasitoids"],
+        "treatment": "Biological control (Trichogramma) plus removal of affected canes",
+        "cost_bdt_per_acre": [800, 1400],
+        "cost_basis": "estimate — no KB figure; long season implies repeat effort",
+        "weather_triggers": [],
+        "source": "other_crops_guide.md — Sugarcane risks"
+      }
+    ],
+    "Sweet Potato": [
+      {
+        "name": "Sweet potato weevil",
+        "type": "pest",
+        "das_window": [45, 120],
+        "symptom": "Tunnelled roots with a bitter taste",
+        "threshold": "Prevent — keep ridges earthed up",
+        "peak": "Dry cracked soil",
+        "prevention": [
+          "Keep ridges earthed up so soil does not crack",
+          "Avoid letting the soil dry and crack open"
+        ],
+        "treatment": "Cultural control — the KB calls this crop otherwise very hardy",
+        "cost_bdt_per_acre": [300, 600],
+        "cost_basis": "estimate — KB describes cultural control only",
+        "weather_triggers": [],
+        "source": "other_crops_guide.md — Sweet Potato risks"
+      }
+    ]
+  },
+  "general_weather_rules": [
+    "Prolonged cloudy humid spells: expect aphid (mustard) and blight (potato) pressure.",
+    "Post-storm Aman fields: expect bacterial leaf blight.",
+    "Dense over-fertilized canopies: expect brown planthopper and lodging.",
+    "After any >20 mm rain during grain drying: turn and re-dry grain to prevent mould."
+  ],
+  "source": "pest_disease_reference.md — General weather-pest rules"
+}

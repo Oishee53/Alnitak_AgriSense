@@ -62,6 +62,10 @@ class ChatResponse(BaseModel):
     crop_options: Optional[dict[str, Any]] = None  # {options: [...], kb_references, note}
     season_plan: Optional[dict[str, Any]] = None
     financials: Optional[dict[str, Any]] = None
+    # Tier-1 artifacts:
+    fertilizer_schedule: Optional[dict[str, Any]] = None
+    pest_risk: Optional[dict[str, Any]] = None
+    scenario: Optional[dict[str, Any]] = None
     # Prior conversation, returned when rehydrating a session (memory).
     history: Optional[list[dict[str, str]]] = None
 
