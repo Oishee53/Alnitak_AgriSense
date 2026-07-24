@@ -1,0 +1,253 @@
+{
+  "_note": "Per-acre economics in BDT. Costs compiled from public DAE/BARI extension figures and current input prices; treat as planning estimates. Yield in maund/acre (1 maund = 37.32 kg). Prices cross-checked with data/seed/market_prices.json (seeded/mock).",
+  "unit": "maund",
+  "crops": {
+    "T. Aman Rice": {
+      "yield_per_acre": 45,
+      "price_bdt_per_unit": 1200,
+      "costs_per_acre": {
+        "Seed": 800,
+        "Land preparation": 3500,
+        "Fertilizer": 4500,
+        "Irrigation": 1500,
+        "Labour": 12000,
+        "Pesticide": 1500,
+        "Miscellaneous": 1000
+      }
+    },
+    "Boro Rice": {
+      "yield_per_acre": 60,
+      "price_bdt_per_unit": 1200,
+      "costs_per_acre": {
+        "Seed": 900,
+        "Land preparation": 3800,
+        "Fertilizer": 6000,
+        "Irrigation": 6000,
+        "Labour": 13000,
+        "Pesticide": 1800,
+        "Miscellaneous": 1200
+      }
+    },
+    "Maize (Kharif)": {
+      "yield_per_acre": 75,
+      "price_bdt_per_unit": 950,
+      "costs_per_acre": {
+        "Seed": 2200,
+        "Land preparation": 3000,
+        "Fertilizer": 5500,
+        "Irrigation": 2500,
+        "Labour": 8000,
+        "Pesticide": 1200,
+        "Miscellaneous": 800
+      }
+    },
+    "Potato": {
+      "yield_per_acre": 200,
+      "price_bdt_per_unit": 700,
+      "costs_per_acre": {
+        "Seed (tubers)": 18000,
+        "Land preparation": 4000,
+        "Fertilizer": 7000,
+        "Irrigation": 3000,
+        "Labour": 15000,
+        "Pesticide": 2500,
+        "Miscellaneous": 1500
+      }
+    },
+    "Wheat": {
+      "yield_per_acre": 30,
+      "price_bdt_per_unit": 1400,
+      "costs_per_acre": {
+        "Seed": 1500,
+        "Land preparation": 3000,
+        "Fertilizer": 4000,
+        "Irrigation": 2000,
+        "Labour": 7000,
+        "Pesticide": 800,
+        "Miscellaneous": 700
+      }
+    },
+    "Mustard": {
+      "yield_per_acre": 12,
+      "price_bdt_per_unit": 3200,
+      "costs_per_acre": {
+        "Seed": 400,
+        "Land preparation": 2500,
+        "Fertilizer": 3000,
+        "Irrigation": 1000,
+        "Labour": 6000,
+        "Pesticide": 600,
+        "Miscellaneous": 500
+      }
+    },
+    "Jute": {
+      "yield_per_acre": 20,
+      "price_bdt_per_unit": 2800,
+      "costs_per_acre": {
+        "Seed": 600,
+        "Land preparation": 3000,
+        "Fertilizer": 3500,
+        "Irrigation": 500,
+        "Labour (incl. retting)": 14000,
+        "Pesticide": 800,
+        "Miscellaneous": 800
+      }
+    },
+    "Aus Rice": {
+      "yield_per_acre": 35,
+      "price_bdt_per_unit": 1150,
+      "costs_per_acre": {
+        "Seed": 700,
+        "Land preparation": 3000,
+        "Fertilizer": 3500,
+        "Irrigation": 1000,
+        "Labour": 10000,
+        "Pesticide": 1200,
+        "Miscellaneous": 800
+      }
+    },
+    "Lentil": {
+      "yield_per_acre": 14,
+      "price_bdt_per_unit": 3800,
+      "costs_per_acre": {
+        "Seed": 1500,
+        "Land preparation": 2000,
+        "Fertilizer": 2000,
+        "Irrigation": 500,
+        "Labour": 6000,
+        "Pesticide": 800,
+        "Miscellaneous": 500
+      }
+    },
+    "Chickpea": {
+      "yield_per_acre": 14,
+      "price_bdt_per_unit": 3500,
+      "costs_per_acre": {
+        "Seed": 1800,
+        "Land preparation": 2000,
+        "Fertilizer": 2000,
+        "Irrigation": 500,
+        "Labour": 6000,
+        "Pesticide": 1000,
+        "Miscellaneous": 500
+      }
+    },
+    "Mungbean": {
+      "yield_per_acre": 12,
+      "price_bdt_per_unit": 4500,
+      "costs_per_acre": {
+        "Seed": 1200,
+        "Land preparation": 2000,
+        "Fertilizer": 1800,
+        "Irrigation": 500,
+        "Labour": 6000,
+        "Pesticide": 900,
+        "Miscellaneous": 500
+      }
+    },
+    "Onion": {
+      "yield_per_acre": 90,
+      "price_bdt_per_unit": 1800,
+      "costs_per_acre": {
+        "Seed": 20000,
+        "Land preparation": 4000,
+        "Fertilizer": 7000,
+        "Irrigation": 3000,
+        "Labour": 18000,
+        "Pesticide": 3000,
+        "Miscellaneous": 2000
+      }
+    },
+    "Garlic": {
+      "yield_per_acre": 60,
+      "price_bdt_per_unit": 3500,
+      "costs_per_acre": {
+        "Seed (cloves)": 45000,
+        "Land preparation": 3500,
+        "Fertilizer": 6000,
+        "Irrigation": 2500,
+        "Labour": 16000,
+        "Pesticide": 2000,
+        "Miscellaneous": 2000
+      }
+    },
+    "Chili": {
+      "yield_per_acre": 15,
+      "price_bdt_per_unit": 8000,
+      "costs_per_acre": {
+        "Seed": 2500,
+        "Land preparation": 3500,
+        "Fertilizer": 6000,
+        "Irrigation": 3000,
+        "Labour": 20000,
+        "Pesticide": 4000,
+        "Miscellaneous": 2000
+      }
+    },
+    "Tomato": {
+      "yield_per_acre": 250,
+      "price_bdt_per_unit": 800,
+      "costs_per_acre": {
+        "Seed": 2000,
+        "Land preparation": 4000,
+        "Fertilizer": 6000,
+        "Irrigation": 4000,
+        "Labour": 20000,
+        "Pesticide": 4000,
+        "Miscellaneous": 2000
+      }
+    },
+    "Brinjal": {
+      "yield_per_acre": 220,
+      "price_bdt_per_unit": 1200,
+      "costs_per_acre": {
+        "Seed": 1500,
+        "Land preparation": 4000,
+        "Fertilizer": 6000,
+        "Irrigation": 3500,
+        "Labour": 20000,
+        "Pesticide": 5000,
+        "Miscellaneous": 2000
+      }
+    },
+    "Groundnut": {
+      "yield_per_acre": 22,
+      "price_bdt_per_unit": 3500,
+      "costs_per_acre": {
+        "Seed": 4000,
+        "Land preparation": 3000,
+        "Fertilizer": 3000,
+        "Irrigation": 2000,
+        "Labour": 10000,
+        "Pesticide": 1500,
+        "Miscellaneous": 1000
+      }
+    },
+    "Sugarcane": {
+      "yield_per_acre": 450,
+      "price_bdt_per_unit": 180,
+      "costs_per_acre": {
+        "Seed (setts)": 12000,
+        "Land preparation": 5000,
+        "Fertilizer": 10000,
+        "Irrigation": 8000,
+        "Labour": 20000,
+        "Pesticide": 2000,
+        "Miscellaneous": 3000
+      }
+    },
+    "Sweet Potato": {
+      "yield_per_acre": 130,
+      "price_bdt_per_unit": 500,
+      "costs_per_acre": {
+        "Seed (vines)": 2000,
+        "Land preparation": 3000,
+        "Fertilizer": 3500,
+        "Irrigation": 2000,
+        "Labour": 12000,
+        "Pesticide": 1000,
+        "Miscellaneous": 1000
+      }
+    }
+  }
+}

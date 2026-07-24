@@ -1,0 +1,20 @@
+{
+  "_note": "MOCK/seeded supplier catalog (Tier 2). A seeded/mock catalog is explicitly allowed by the brief.",
+  "suppliers": [
+    {
+      "id": "SUP001", "name": "Rangpur Agro Depot", "distance_km": 4.2,
+      "rating": 4.5, "delivery_days": 1,
+      "items": { "urea_kg": 27, "tsp_kg": 30, "mop_kg": 25, "rice_seed_kg": 60 }
+    },
+    {
+      "id": "SUP002", "name": "Krishi Bhandar", "distance_km": 9.8,
+      "rating": 4.2, "delivery_days": 2,
+      "items": { "urea_kg": 26, "tsp_kg": 29, "mop_kg": 24, "rice_seed_kg": 58 }
+    },
+    {
+      "id": "SUP003", "name": "GreenField Inputs", "distance_km": 15.0,
+      "rating": 4.7, "delivery_days": 3,
+      "items": { "urea_kg": 25, "tsp_kg": 31, "mop_kg": 26, "rice_seed_kg": 62 }
+    }
+  ]
+}

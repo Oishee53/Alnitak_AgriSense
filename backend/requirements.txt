@@ -1,0 +1,27 @@
+# Pins are lower-bounds so pip resolves wheels compatible with Python 3.13.
+
+# ---- Web framework ----
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.6
+pydantic>=2.9.2
+pydantic-settings>=2.5.2
+
+# ---- LLM provider (OpenAI — the team's credits) ----
+openai>=1.51.0
+
+# ---- HTTP client (weather, external APIs) ----
+httpx>=0.27.2
+
+# ---- RAG / vector store ----
+chromadb>=0.5.5
+
+# ---- Memory / persistence ----
+SQLAlchemy>=2.0.35
+
+# ---- Utilities ----
+python-dotenv>=1.0.1
+tenacity>=9.0.0          # retries for external calls
+
+# ---- Testing ----
+pytest>=8.3.3
+pytest-asyncio>=0.24.0

@@ -1,0 +1,24 @@
+{
+  "_note": "MOCK/seeded market prices (BDT). Replace with a real feed when available. Prices are per maund (approx 37.32 kg) unless noted.",
+  "_source": "placeholder — seed values only",
+  "prices": {
+    "Boro Rice": { "unit": "maund", "current": 1200, "history": [1100, 1150, 1180, 1200] },
+    "Maize":     { "unit": "maund", "current": 950,  "history": [900, 920, 940, 950] },
+    "Potato":    { "unit": "maund", "current": 700,  "history": [820, 780, 740, 700] },
+    "Jute":      { "unit": "maund", "current": 2800, "history": [2600, 2700, 2750, 2800] },
+    "Wheat":     { "unit": "maund", "current": 1400, "history": [1350, 1370, 1390, 1400] },
+    "Mustard":   { "unit": "maund", "current": 3200, "history": [3000, 3100, 3150, 3200] },
+    "Aus Rice":  { "unit": "maund", "current": 1150, "history": [1080, 1100, 1130, 1150] },
+    "Lentil":    { "unit": "maund", "current": 3800, "history": [3500, 3600, 3700, 3800] },
+    "Chickpea":  { "unit": "maund", "current": 3500, "history": [3300, 3400, 3450, 3500] },
+    "Mungbean":  { "unit": "maund", "current": 4500, "history": [4200, 4300, 4400, 4500] },
+    "Onion":     { "unit": "maund", "current": 1800, "history": [1200, 2400, 2000, 1800] },
+    "Garlic":    { "unit": "maund", "current": 3500, "history": [3000, 3800, 3600, 3500] },
+    "Chili":     { "unit": "maund", "current": 8000, "history": [6500, 9000, 8500, 8000] },
+    "Tomato":    { "unit": "maund", "current": 800,  "history": [1400, 1000, 900, 800] },
+    "Brinjal":   { "unit": "maund", "current": 1200, "history": [1500, 1300, 1100, 1200] },
+    "Groundnut": { "unit": "maund", "current": 3500, "history": [3200, 3300, 3400, 3500] },
+    "Sugarcane": { "unit": "maund", "current": 180,  "history": [160, 170, 175, 180] },
+    "Sweet Potato": { "unit": "maund", "current": 500, "history": [450, 470, 490, 500] }
+  }
+}

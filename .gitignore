@@ -1,0 +1,33 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Data / local stores (do NOT commit secrets or large indexes) ----
+backend/data/chroma/
+backend/data/*.db
+backend/data/*.sqlite3
+*.log
+
+# ---- Node / frontend ----
+node_modules/
+frontend/dist/
+frontend/.env
+npm-debug.log*
+yarn-error.log*
+
+# ---- Editor / OS ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+~$*
+
+# Keep folder structure but ignore contents where noted
+!**/.gitkeep
