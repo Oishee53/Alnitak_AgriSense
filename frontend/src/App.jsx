@@ -8,13 +8,15 @@ import FinanceTable from "./components/FinanceTable.jsx";
 import FertilizerView from "./components/FertilizerView.jsx";
 import PestRiskView from "./components/PestRiskView.jsx";
 import ScenarioView from "./components/ScenarioView.jsx";
-import { sendChat, getSession, getTrace } from "./lib/api.js";
+import WeatherAlerts from "./components/WeatherAlerts.jsx";
+import SessionList from "./components/SessionList.jsx";
+import { sendChat, getSession, getTrace, listSessions } from "./lib/api.js";
 
 const LS_KEY = "agrisense_session_id";
 
-// Demo layout: conversation + tabbed output (crops / calendar / finance) on the
-// left, agent TRACE on the right. Tabs keep each deliverable one click away
-// instead of buried in a long scroll.
+// Demo layout: conversation + tabbed output on the left, agent TRACE on the
+// right, and an optional session-history sidebar. Tabs keep each deliverable
+// one click away instead of buried in a long scroll.
 export default function App() {
   const [sessionId, setSessionId] = useState(
     () => localStorage.getItem(LS_KEY) || null
@@ -28,29 +30,55 @@ export default function App() {
   const [fertilizer, setFertilizer] = useState(null);
   const [pestRisk, setPestRisk] = useState(null);
   const [scenario, setScenario] = useState(null);
+  const [alerts, setAlerts] = useState(null); // weather_advisory artifact (Tier 1)
   const [busy, setBusy] = useState(false);
-  // 'crops' | 'calendar' | 'finance' | 'fertilizer' | 'pests' | 'scenario'
+  // 'crops' | 'calendar' | 'finance' | 'fertilizer' | 'pests' | 'scenario' | 'weather'
   const [tab, setTab] = useState(null);
+  const [sessions, setSessions] = useState([]); // session history (sidebar)
+  const [showSessions, setShowSessions] = useState(false);
 
-  // Rehydrate a prior session on load (persistent memory across refreshes).
+  async function refreshSessions() {
+    try {
+      const res = await listSessions();
+      setSessions(res.sessions || []);
+    } catch {
+      /* sidebar is best-effort */
+    }
+  }
+
+  // Rehydrate a session: profile, chat history, artifacts AND persisted trace.
+  async function loadSession(id) {
+    try {
+      const snap = await getSession(id);
+      setSessionId(id);
+      localStorage.setItem(LS_KEY, id);
+      setMessages(snap.history || []);
+      setFarm(snap.farm);
+      setCrops(snap.crop_options);
+      setPlan(snap.season_plan);
+      setFinancials(snap.financials);
+      setFertilizer(snap.fertilizer_schedule);
+      setPestRisk(snap.pest_risk);
+      setScenario(snap.scenario);
+      setAlerts(snap.weather_alerts);
+      if (snap.season_plan) setTab("calendar");
+      else if (snap.crop_options) setTab("crops");
+      else setTab(null);
+      const t = await getTrace(id);
+      setTrace(t.trace || []);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // On load: rehydrate the last session (persistent memory) + session list.
   useEffect(() => {
+    refreshSessions();
     if (!sessionId) return;
     (async () => {
-      try {
-        const snap = await getSession(sessionId);
-        setMessages(snap.history || []);
-        setFarm(snap.farm);
-        setCrops(snap.crop_options);
-        setPlan(snap.season_plan);
-        setFinancials(snap.financials);
-        setFertilizer(snap.fertilizer_schedule);
-        setPestRisk(snap.pest_risk);
-        setScenario(snap.scenario);
-        if (snap.season_plan) setTab("calendar");
-        else if (snap.crop_options) setTab("crops");
-        const t = await getTrace(sessionId);
-        setTrace(t.trace || []);
-      } catch {
+      const ok = await loadSession(sessionId);
+      if (!ok) {
         localStorage.removeItem(LS_KEY); // stale id — start fresh
         setSessionId(null);
       }
@@ -68,12 +96,14 @@ export default function App() {
     if (res.fertilizer_schedule) setFertilizer(res.fertilizer_schedule);
     if (res.pest_risk) setPestRisk(res.pest_risk);
     if (res.scenario) setScenario(res.scenario);
+    if (res.weather_alerts) setAlerts(res.weather_alerts);
     if (res.trace?.length) setTrace((t) => [...t, ...res.trace]);
     // Auto-focus the newest artifact so the user never has to hunt for it.
     // Tier-1 answers are what the farmer just asked for, so they win the focus.
     if (res.scenario) setTab("scenario");
     else if (res.pest_risk) setTab("pests");
     else if (res.fertilizer_schedule) setTab("fertilizer");
+    else if (res.weather_alerts) setTab("weather");
     else if (res.season_plan) setTab("calendar");
     else if (res.crop_options) setTab("crops");
   }
@@ -86,6 +116,7 @@ export default function App() {
       const res = await sendChat(sessionId, text);
       setMessages((m) => [...m, { role: "assistant", content: res.reply }]);
       applyResponse(res);
+      refreshSessions(); // keep the sidebar labels/counts current
     } catch (e) {
       setMessages((m) => [
         ...m,
@@ -108,6 +139,7 @@ export default function App() {
     setFertilizer(null);
     setPestRisk(null);
     setScenario(null);
+    setAlerts(null);
     setTab(null);
   }
 
@@ -121,9 +153,18 @@ export default function App() {
     { key: "fertilizer", label: "🧪 Fertilizer", data: fertilizer },
     { key: "pests", label: "🐛 Pest risk", data: pestRisk },
     { key: "scenario", label: "🔮 What-if", data: scenario },
+    { key: "weather", label: "🌦️ Weather alerts", data: alerts },
   ];
   const available = TABS.filter((t) => !!t.data);
-  const fallbackOrder = ["scenario", "pests", "fertilizer", "calendar", "crops", "finance"];
+  const fallbackOrder = [
+    "scenario",
+    "pests",
+    "fertilizer",
+    "weather",
+    "calendar",
+    "crops",
+    "finance",
+  ];
   const effectiveTab =
     available.find((t) => t.key === tab)?.key ??
     fallbackOrder.find((k) => available.some((t) => t.key === k)) ??
@@ -134,12 +175,29 @@ export default function App() {
       <header className="topbar">
         <h1>🌾 AgriSense AI</h1>
         <span className="team">Team Alnitak · Bdapps Agentic AI Hackathon</span>
+        <button
+          className={`toggle-sessions ${showSessions ? "active" : ""}`}
+          onClick={() => setShowSessions((v) => !v)}
+        >
+          🗂️ Sessions{sessions.length ? ` (${sessions.length})` : ""}
+        </button>
         <button className="new-session" onClick={newSession}>
           ↻ New session
         </button>
       </header>
 
-      <main className="grid">
+      <main className={`grid ${showSessions ? "with-sidebar" : ""}`}>
+        {showSessions && (
+          <aside className="sidebar">
+            <SessionList
+              sessions={sessions}
+              currentId={sessionId}
+              busy={busy}
+              onSelect={loadSession}
+              onNew={newSession}
+            />
+          </aside>
+        )}
         <section className="left">
           <ChatPanel messages={messages} busy={busy} onSend={handleSend} />
           <ProfileCard farm={farm} />
@@ -182,6 +240,7 @@ export default function App() {
           {effectiveTab === "fertilizer" && <FertilizerView schedule={fertilizer} />}
           {effectiveTab === "pests" && <PestRiskView risk={pestRisk} />}
           {effectiveTab === "scenario" && <ScenarioView scenario={scenario} />}
+          {effectiveTab === "weather" && <WeatherAlerts data={alerts} />}
         </section>
 
         <aside className="right">

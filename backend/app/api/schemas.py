@@ -66,6 +66,7 @@ class ChatResponse(BaseModel):
     fertilizer_schedule: Optional[dict[str, Any]] = None
     pest_risk: Optional[dict[str, Any]] = None
     scenario: Optional[dict[str, Any]] = None
+    weather_alerts: Optional[dict[str, Any]] = None  # weather_advisory result (Tier 1)
     # Prior conversation, returned when rehydrating a session (memory).
     history: Optional[list[dict[str, str]]] = None
 

@@ -70,11 +70,11 @@ written to a **trace** that the frontend renders live.
 | **0** | Explained reasoning | prompts + tool outputs carry `because` fields | done |
 | **0** | Knowledge base + RAG | `rag/`, `data/knowledge_base/` | done |
 | **0** | Visible agent trace | `agent/trace.py`, frontend `TracePanel` | done |
-| **1** | Persistent memory (cross-session) | `memory/` | done (SQLite; survives restarts) |
-| **1** | Proactive weather-triggered advice | `tools/fertilizer.py` (rain-delay alerts) | done |
-| **1** | Fertilizer / irrigation scheduler | `tools/fertilizer.py` | done |
-| **1** | Pest & disease risk | `tools/pests.py` | done |
-| **1** | Scenario simulation (what-if) | `tools/scenario.py` | done |
+| **1** | Persistent memory (cross-session) | `memory/` (+ session-history sidebar, persisted agent trace) | done (SQLite; survives restarts) |
+| **1** | Proactive weather-triggered advice | `tools/advisory.py` + `WeatherAlerts` panel; `tools/fertilizer.py` also flags rain-delayed urea | done (live forecast × dated plan → alerts, e.g. "delay urea before heavy rain") |
+| **1** | Fertilizer / irrigation scheduler | `tools/fertilizer.py` + `FertilizerView` | done (kg + cost per stage, organic option, FRG-2018 doses) |
+| **1** | Pest & disease risk | `tools/pests.py` + `PestRiskView` | done (stage × live-weather gated, IPM-first, costed) |
+| **1** | Scenario simulation (what-if) | `tools/scenario.py` + `ScenarioView` | done (re-runs the finance engine, diffs every figure) |
 | **2** | bdapps CaaS payment (sandbox) | `bdapps/caas.py`, `api/routes_payment.py` | working (sandbox sim) |
 | **2** | Market price intelligence | `tools/market.py` | stub |
 | **2** | Bengali / voice | frontend + prompts | future |

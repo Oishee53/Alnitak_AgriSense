@@ -32,6 +32,7 @@ _ARTIFACT_SLOTS = {
     "build_fertilizer_schedule": "fertilizer_schedule",
     "assess_pest_risk": "pest_risk",
     "simulate_scenario": "scenario",
+    "weather_advisory": "weather_alerts",
 }
 
 _REQUIRED_FIELDS = {
@@ -350,6 +351,7 @@ class Orchestrator:
             fertilizer_schedule=arts.get("fertilizer_schedule"),
             pest_risk=arts.get("pest_risk"),
             scenario=arts.get("scenario"),
+            weather_alerts=arts.get("weather_alerts"),
         )
 
     @staticmethod
@@ -376,6 +378,13 @@ class Orchestrator:
                 return (
                     f"cost {result.get('total_cost_bdt'):,} → revenue {result.get('revenue_bdt'):,} "
                     f"→ net {result.get('net_profit_bdt'):,} BDT (ROI {result.get('roi')})"
+                )
+            if tool == "weather_advisory":
+                alerts = result.get("alerts", [])
+                fw = result.get("forecast_window", {})
+                return (
+                    f"{len(alerts)} weather alert(s) over {fw.get('days')}-day forecast "
+                    f"({fw.get('total_rain_mm')} mm rain) for {result.get('crop')}"
                 )
             if tool == "update_farm_profile":
                 miss = result.get("still_missing", [])

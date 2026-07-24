@@ -47,6 +47,30 @@ def normalize_season(season: str | None) -> str | None:
     return s
 
 
+# Rice-specific season names. When a farmer names one of these they are naming a
+# specific rice crop they intend to grow, not just a calendar window. We keep
+# normalize_season() mapping them to the shared calendar season (so other
+# same-window crops stay available as alternatives) but recover the rice intent
+# separately here, so an explicit "Boro"/"Aman"/"Aus" request is never silently
+# swapped for a different, higher-profit crop that shares the season.
+_SEASON_RICE_CROP = {
+    "aman": "T. Aman Rice",
+    "boro": "Boro Rice",
+    "aus": "Aus Rice",
+}
+
+
+def season_rice_crop(season: str | None) -> str | None:
+    """The specific rice crop a rice-season name implies (Aman/Boro/Aus), else None."""
+    if not season:
+        return None
+    s = season.strip().lower()
+    for key, crop in _SEASON_RICE_CROP.items():
+        if key in s:
+            return crop
+    return None
+
+
 def normalize_soil(soil: str | None) -> str:
     """Map free-text soil descriptions onto our four texture keys."""
     s = (soil or "").strip().lower()

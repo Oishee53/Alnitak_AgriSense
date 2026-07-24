@@ -19,6 +19,11 @@ backend/data/*.sqlite3
 # README, which says where to download them and which pages we used.
 backend/data/sources/*.pdf
 
+# ---- Redirected pip / npm caches (kept off the full system drive) ----
+pip-tmpcache/
+pip-tmpnpm-cache/
+pip-tmp/
+
 # ---- Node / frontend ----
 node_modules/
 frontend/dist/

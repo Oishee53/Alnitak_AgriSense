@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, ForeignKey, String, Text
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.memory.db import Base
@@ -61,6 +61,26 @@ class Session(Base):
     def to_llm_messages(self) -> list[dict[str, Any]]:
         """Render prior messages into the LLM conversation format."""
         return [{"role": m.role, "content": m.content} for m in self.messages]
+
+
+class TraceEntry(Base):
+    """One persisted agent-trace step (Tier-0 #8, made durable).
+
+    The live trace is recorded in memory for the current turn / SSE stream;
+    each completed turn's steps are also persisted here so the trace panel
+    survives page reloads and backend restarts.
+    """
+
+    __tablename__ = "trace_entries"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    session_id: Mapped[str] = mapped_column(ForeignKey("sessions.id"), index=True)
+    kind: Mapped[str] = mapped_column(String)  # thought | tool_call | tool_result | message
+    tool: Mapped[str | None] = mapped_column(String, nullable=True)
+    params: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    result: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
 
 class Message(Base):

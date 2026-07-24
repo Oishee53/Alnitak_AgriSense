@@ -13,7 +13,16 @@ from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Optional
 
 from app.rag import retriever
-from app.tools import crops, fertilizer, finance, pests, scenario, season_plan, weather
+from app.tools import (
+    advisory,
+    crops,
+    fertilizer,
+    finance,
+    pests,
+    scenario,
+    season_plan,
+    weather,
+)
 
 
 @dataclass
@@ -247,6 +256,33 @@ TOOLS: dict[str, Tool] = {
             "required": ["crop", "farm_size_acres"],
         },
         handler=scenario.simulate,
+    ),
+    "weather_advisory": Tool(
+        name="weather_advisory",
+        description=(
+            "PROACTIVE weather-triggered advice (Tier 1). Watches the LIVE "
+            "forecast against the chosen crop's upcoming plan actions and returns "
+            "dated adjustments — e.g. delay a urea top-dress before heavy rain, "
+            "skip an irrigation the rain will cover, spray in a dry gap, or harvest "
+            "before a storm. Call this after a season plan is chosen, or whenever "
+            "the farmer asks about weather risk or fertilizer/irrigation timing. "
+            "Pass the crop and the farm location; it fetches the real forecast and "
+            "builds the dated plan itself. Surface each alert with its date, the "
+            "forecast numbers, and the because."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "crop": {"type": "string"},
+                "location": {"type": "string", "description": "farm location for the forecast"},
+                "sowing_date": {"type": "string", "description": "ISO date if the crop is already sown; omit to use the recommended window"},
+                "soil_type": {"type": "string"},
+                "water_availability": {"type": "string"},
+                "days": {"type": "integer", "default": 16, "minimum": 1, "maximum": 16},
+            },
+            "required": ["crop", "location"],
+        },
+        handler=advisory.weather_advisory,
     ),
     "search_knowledge_base": Tool(
         name="search_knowledge_base",

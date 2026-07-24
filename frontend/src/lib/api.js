@@ -29,6 +29,11 @@ export async function getSession(sessionId) {
   return jsonOrThrow(res); // -> ChatResponse (with history)
 }
 
+export async function listSessions() {
+  const res = await fetch(`${BASE}/api/sessions`);
+  return jsonOrThrow(res); // -> {sessions: [{id,label,preview,created_at,message_count}]}
+}
+
 export async function getTrace(sessionId) {
   const res = await fetch(`${BASE}/api/trace/${sessionId}`);
   return jsonOrThrow(res);

@@ -24,15 +24,21 @@ from app.tools.seed_data import (
     market_prices,
     normalize_season,
     normalize_soil,
+    season_rice_crop,
 )
 
 
 def current_season(today: date | None = None) -> str:
-    """Which cropping season is running right now (by month)."""
+    """Which cropping season is running right now (by month).
+
+    Boundaries follow the KB season definitions (soil_water_suitability.md):
+    Kharif-1 = mid-March–June (pre-monsoon), Kharif-2 / Aman = July–October
+    (monsoon), Rabi = November–February (dry winter). Boro rice is a Rabi crop.
+    """
     m = (today or date.today()).month
-    if 3 <= m <= 5:
+    if 3 <= m <= 6:
         return "kharif-1"
-    if 6 <= m <= 10:
+    if 7 <= m <= 10:
         return "kharif-2"
     return "rabi"
 
@@ -235,6 +241,32 @@ async def recommend_crops(
     pool.sort(
         key=lambda e: (e["score"], -_RISK_ORDER.get(e["risk"], 1)), reverse=True
     )
+
+    # If the farmer named a rice season (Aman/Boro/Aus), they effectively named a
+    # specific rice crop. Surface it FIRST as their stated choice so the request
+    # is never silently swapped for a different same-window crop; alternatives
+    # still follow, ranked. If that rice crop was ruled out, say why instead.
+    requested_crop = season_rice_crop(season)
+    requested_crop_note: str | None = None
+    if requested_crop:
+        idx = next((i for i, e in enumerate(pool) if e["crop"] == requested_crop), None)
+        if idx is not None:
+            entry = pool.pop(idx)
+            entry["farmer_requested"] = True
+            entry["because"] = (
+                f"you asked to grow {requested_crop} this {season} season — shown "
+                f"first as your stated choice; " + entry["because"]
+            )
+            pool.insert(0, entry)
+        else:
+            ex = next((x for x in excluded if x["crop"] == requested_crop), None)
+            if ex:
+                requested_crop_note = (
+                    f"You asked for {requested_crop}, but it was ruled out for your "
+                    f"farm: {'; '.join(ex['reasons'])}. The options below are the "
+                    f"closest feasible alternatives for the same season."
+                )
+
     top = [{k: v for k, v in e.items() if k != "_feasible"} for e in pool[:5]]
 
     kb_refs = await retriever.search_compact(
@@ -251,6 +283,7 @@ async def recommend_crops(
             "budget_bdt": budget_bdt,
             "farm_size_acres": acres,
             "priority": priority,
+            "requested_crop": requested_crop,
             "weather_summary": weather_summary,
         },
         "options": top,
@@ -271,4 +304,6 @@ async def recommend_crops(
         )
     if weather_gate_note:
         result["weather_note"] = weather_gate_note
+    if requested_crop_note:
+        result["requested_crop_note"] = requested_crop_note
     return result

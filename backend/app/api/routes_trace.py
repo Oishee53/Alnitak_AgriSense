@@ -10,14 +10,22 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
 from app.agent import trace as trace_mod
+from app.memory import store
 
 router = APIRouter(prefix="/api/trace", tags=["trace"])
 
 
 @router.get("/{session_id}")
 def get_trace(session_id: str) -> dict:
-    """Return the full recorded trace for a session."""
-    return {"session_id": session_id, "trace": trace_mod.get_trace(session_id)}
+    """Return the full recorded trace for a session.
+
+    Served from the persisted store (survives backend restarts); the in-memory
+    trace is used when it is ahead (e.g. a turn in progress not yet saved).
+    """
+    mem = trace_mod.get_trace(session_id)
+    persisted = store.load_trace(session_id)
+    trace = mem if len(mem) > len(persisted) else persisted
+    return {"session_id": session_id, "trace": trace}
 
 
 @router.get("/{session_id}/stream")

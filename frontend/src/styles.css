@@ -217,3 +217,53 @@ body { margin: 0; background: var(--bg); color: var(--ink); }
 .alt-list li { background: var(--panel-2); border-radius: 8px; padding: 0.5rem 0.65rem; border-left: 3px solid var(--accent); }
 .alt-head { display: flex; gap: 0.5rem; align-items: baseline; flex-wrap: wrap; }
 .alt-profit { margin-left: auto; color: var(--accent-2); font-size: 0.85rem; font-weight: 600; }
+
+/* Weather alerts (Tier 1 — proactive weather-triggered advice) */
+.weather-alerts .sub { color: var(--muted); font-size: 0.85rem; margin: 0 0 0.75rem; }
+.alert-clear { color: var(--accent-2); font-size: 0.9rem; }
+.alert-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.alert {
+  background: var(--panel-2); border: 1px solid var(--border);
+  border-left: 3px solid var(--warn); border-radius: 8px; padding: 0.6rem 0.75rem;
+}
+.alert.sev-high { border-left-color: #e05858; }
+.alert.sev-warn { border-left-color: var(--warn); }
+.alert.sev-advice { border-left-color: var(--accent); }
+.alert-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.alert-date { font-weight: 600; }
+.alert-stage { color: var(--muted); font-size: 0.85rem; }
+.alert-sev { margin-left: auto; font-size: 0.75rem; color: var(--muted); }
+.alert-rec { margin-top: 0.35rem; font-size: 0.92rem; line-height: 1.35; }
+.alert-trigger { margin-top: 0.25rem; color: var(--warn); font-size: 0.8rem; }
+.alert-because { margin-top: 0.2rem; color: var(--muted); font-size: 0.8rem; font-style: italic; }
+.upcoming-actions { margin-top: 0.75rem; font-size: 0.85rem; }
+.upcoming-actions summary { cursor: pointer; color: var(--muted); }
+.upcoming-actions ul { margin: 0.5rem 0 0; padding-left: 1.1rem; }
+.upcoming-actions li { margin-bottom: 0.3rem; line-height: 1.35; }
+
+/* Session history sidebar (Tier 1 — persistent memory) */
+.grid.with-sidebar { grid-template-columns: 250px 1fr 1fr; }
+@media (max-width: 900px) { .grid.with-sidebar { grid-template-columns: 1fr; } }
+.toggle-sessions, .new-session {
+  margin-left: auto; background: var(--panel-2); color: var(--ink);
+  border: 1px solid var(--border); border-radius: 8px; padding: 0.35rem 0.7rem;
+  cursor: pointer; font-size: 0.85rem;
+}
+.topbar .new-session { margin-left: 0.5rem; }
+.toggle-sessions.active { border-color: var(--accent); color: var(--accent-2); }
+.sessions-head { display: flex; align-items: center; justify-content: space-between; }
+.sessions-head h2 { margin: 0; }
+.sessions-new {
+  background: var(--panel-2); color: var(--accent-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.25rem 0.6rem; cursor: pointer; font-size: 0.8rem;
+}
+.session-list { list-style: none; margin: 0.75rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; max-height: 70vh; overflow-y: auto; }
+.session-item {
+  width: 100%; text-align: left; display: flex; flex-direction: column; gap: 0.15rem;
+  background: var(--panel-2); color: var(--ink); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.5rem 0.6rem; cursor: pointer;
+}
+.session-item:hover { border-color: var(--accent); }
+.session-item.active { border-color: var(--accent); background: #1d2f24; }
+.session-label { font-size: 0.85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.session-meta { font-size: 0.72rem; color: var(--muted); }
