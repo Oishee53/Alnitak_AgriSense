@@ -75,7 +75,7 @@ written to a **trace** that the frontend renders live.
 | **1** | Fertilizer / irrigation scheduler | `tools/fertilizer.py` + `FertilizerView` | done (kg + cost per stage, organic option, FRG-2018 doses) |
 | **1** | Pest & disease risk | `tools/pests.py` + `PestRiskView` | done (stage × live-weather gated, IPM-first, costed) |
 | **1** | Scenario simulation (what-if) | `tools/scenario.py` + `ScenarioView` | done (re-runs the finance engine, diffs every figure) |
-| **2** | bdapps CaaS payment (sandbox) | `bdapps/caas.py`, `api/routes_payment.py` | working (sandbox sim) |
+| **2** | bdapps CaaS payment + SMS delivery | `bdapps/caas.py`, `bdapps/sms.py`, `api/routes_payment.py`, `PaymentPanel` | done (freemium: 1 BDT Direct Debit unlocks the full season calendar and sends the farmer's alert by SMS; receipt persisted, charge + SMS shown in trace; sandbox or live via provisioned app) |
 | **2** | Market price intelligence | `tools/market.py` | stub |
 | **2** | Bengali / voice | frontend + prompts | future |
 

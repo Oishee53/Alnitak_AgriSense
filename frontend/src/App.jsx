@@ -9,8 +9,15 @@ import FertilizerView from "./components/FertilizerView.jsx";
 import PestRiskView from "./components/PestRiskView.jsx";
 import ScenarioView from "./components/ScenarioView.jsx";
 import WeatherAlerts from "./components/WeatherAlerts.jsx";
+import PaymentPanel from "./components/PaymentPanel.jsx";
 import SessionList from "./components/SessionList.jsx";
-import { sendChat, getSession, getTrace, listSessions } from "./lib/api.js";
+import {
+  sendChat,
+  getSession,
+  getTrace,
+  listSessions,
+  listReceipts,
+} from "./lib/api.js";
 
 const LS_KEY = "agrisense_session_id";
 
@@ -36,6 +43,21 @@ export default function App() {
   const [tab, setTab] = useState(null);
   const [sessions, setSessions] = useState([]); // session history (sidebar)
   const [showSessions, setShowSessions] = useState(false);
+  // Premium unlocked? True once this session has a successful bdapps charge.
+  const [paid, setPaid] = useState(false);
+
+  async function refreshPaid(id) {
+    if (!id) {
+      setPaid(false);
+      return;
+    }
+    try {
+      const res = await listReceipts(id);
+      setPaid((res.receipts || []).some((r) => r.success));
+    } catch {
+      /* stay locked on error */
+    }
+  }
 
   async function refreshSessions() {
     try {
@@ -66,6 +88,7 @@ export default function App() {
       else setTab(null);
       const t = await getTrace(id);
       setTrace(t.trace || []);
+      refreshPaid(id);
       return true;
     } catch {
       return false;
@@ -141,6 +164,7 @@ export default function App() {
     setScenario(null);
     setAlerts(null);
     setTab(null);
+    setPaid(false);
   }
 
   // Which output panel to show: the selected tab if it still has data,
@@ -154,6 +178,9 @@ export default function App() {
     { key: "pests", label: "🐛 Pest risk", data: pestRisk },
     { key: "scenario", label: "🔮 What-if", data: scenario },
     { key: "weather", label: "🌦️ Weather alerts", data: alerts },
+    // Payment is always reachable so judges can find the bdapps checkout;
+    // the panel itself asks for a first message if there's no session yet.
+    { key: "payment", label: "💳 Premium", data: { always: true } },
   ];
   const available = TABS.filter((t) => !!t.data);
   const fallbackOrder = [
@@ -164,6 +191,7 @@ export default function App() {
     "calendar",
     "crops",
     "finance",
+    "payment",
   ];
   const effectiveTab =
     available.find((t) => t.key === tab)?.key ??
@@ -235,12 +263,31 @@ export default function App() {
               }}
             />
           )}
-          {effectiveTab === "calendar" && <PlanView plan={plan} />}
+          {effectiveTab === "calendar" && (
+            <PlanView
+              plan={plan}
+              paid={paid}
+              onGoPremium={() => setTab("payment")}
+            />
+          )}
           {effectiveTab === "finance" && <FinanceTable financials={financials} />}
           {effectiveTab === "fertilizer" && <FertilizerView schedule={fertilizer} />}
           {effectiveTab === "pests" && <PestRiskView risk={pestRisk} />}
           {effectiveTab === "scenario" && <ScenarioView scenario={scenario} />}
           {effectiveTab === "weather" && <WeatherAlerts data={alerts} />}
+          {effectiveTab === "payment" && (
+            <PaymentPanel
+              sessionId={sessionId}
+              crop={plan?.crop || financials?.crop || crops?.options?.[0]?.crop}
+              onCharged={(steps) =>
+                setTrace((t) => [
+                  ...t,
+                  ...steps.map((s, i) => ({ ...s, step: t.length + i + 1 })),
+                ])
+              }
+              onPaid={() => setPaid(true)}
+            />
+          )}
         </section>
 
         <aside className="right">

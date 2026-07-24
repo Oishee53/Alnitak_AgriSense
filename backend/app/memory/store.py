@@ -14,7 +14,7 @@ from typing import Any
 
 from app.api.schemas import ChatResponse, FarmProfile
 from app.memory.db import SessionLocal
-from app.memory.models import Message, Session, TraceEntry
+from app.memory.models import Message, Receipt, Session, TraceEntry
 
 
 def _jsonable(value: Any) -> Any:
@@ -114,6 +114,75 @@ def load_trace(session_id: str) -> list[dict[str, Any]]:
                 "summary": r.summary,
             }
             for i, r in enumerate(rows)
+        ]
+
+
+def save_receipt(
+    session_id: str,
+    resp: "ChatResponse | Any",
+    trace_steps: list[dict[str, Any]] | None = None,
+) -> None:
+    """Persist a bdapps CaaS charge and its trace steps.
+
+    `resp` is a CheckoutResponse. The trace steps (the CaaS request + response)
+    are stored as TraceEntry rows so the payment shows up in the agent trace
+    even after a reload.
+    """
+    with SessionLocal() as db:
+        # Ensure the session row exists (a demo may pay before chatting).
+        if db.get(Session, session_id) is None:
+            db.add(Session(id=session_id, profile_snapshot={}, latest_plan={}))
+        r = resp.receipt or {}
+        db.add(
+            Receipt(
+                session_id=session_id,
+                external_trx_id=resp.external_trx_id,
+                subscriber_id=resp.receipt.get("subscriber_id", ""),
+                amount_bdt=resp.amount_bdt,
+                status_code=resp.status_code,
+                status_detail=resp.status_detail,
+                success=resp.success,
+                mode=r.get("mode", "sandbox"),
+                items=_jsonable(r.get("items")),
+            )
+        )
+        for s in trace_steps or []:
+            db.add(
+                TraceEntry(
+                    session_id=session_id,
+                    kind=s.get("kind", "tool_call"),
+                    tool=s.get("tool"),
+                    params=_jsonable(s.get("params")),
+                    result=_jsonable(s.get("result")),
+                    summary=s.get("summary"),
+                )
+            )
+        db.commit()
+
+
+def list_receipts(session_id: str, limit: int = 50) -> list[dict[str, Any]]:
+    """Return this session's payment history, newest first."""
+    with SessionLocal() as db:
+        rows = (
+            db.query(Receipt)
+            .filter(Receipt.session_id == session_id)
+            .order_by(Receipt.created_at.desc(), Receipt.id.desc())
+            .limit(limit)
+            .all()
+        )
+        return [
+            {
+                "external_trx_id": r.external_trx_id,
+                "subscriber_id": r.subscriber_id,
+                "amount_bdt": r.amount_bdt,
+                "status_code": r.status_code,
+                "status_detail": r.status_detail,
+                "success": r.success,
+                "mode": r.mode,
+                "items": r.items,
+                "paid_at": r.created_at.isoformat() if r.created_at else None,
+            }
+            for r in rows
         ]
 
 

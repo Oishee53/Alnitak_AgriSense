@@ -52,16 +52,27 @@ export function streamTrace(sessionId, onStep) {
   return es;
 }
 
-export async function checkout(sessionId, subscriberId, amountBdt, items) {
+export async function checkout(sessionId, subscriberId, items, amountBdt) {
   const res = await fetch(`${BASE}/api/payment/checkout`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       session_id: sessionId,
       subscriber_id: subscriberId,
-      amount_bdt: amountBdt,
       items,
+      // Omitted when priced items are present — the server sums the basket.
+      ...(amountBdt != null ? { amount_bdt: amountBdt } : {}),
     }),
   });
-  return jsonOrThrow(res);
+  return jsonOrThrow(res); // -> CheckoutResponse (with receipt + trace)
+}
+
+export async function listReceipts(sessionId) {
+  const res = await fetch(`${BASE}/api/payment/receipts/${sessionId}`);
+  return jsonOrThrow(res); // -> { receipts: [...] }
+}
+
+export async function getPaymentMode() {
+  const res = await fetch(`${BASE}/api/payment/mode`);
+  return jsonOrThrow(res); // -> { sandbox: bool, app_id }
 }

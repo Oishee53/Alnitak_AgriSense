@@ -28,7 +28,14 @@ Legend: ⬜ not started · 🟨 in progress · ✅ done
 - ⬜ Scenario simulation (what-if)
 
 ## Tier 2 — Ambitious (bonus, only after Tier 0 solid)
-- 🟨 bdapps CaaS payment (sandbox) *(module + route scaffolded)*
+- ✅ bdapps CaaS payment + SMS delivery — honest freemium: the season calendar
+  shows a 3-stage free preview; a 1 BDT Direct Debit (BDApps API Guide §5.3,
+  `caas/direct/debit`) unlocks the full dated calendar AND sends the farmer's
+  first weather/pest alert via SMS Send (§3.1, `sms/send`). Subscriber number
+  normalized to `tel:8801XXXXXXXXX`, basket summed server-side, password
+  masked, receipt persisted (`receipts` table), charge + SMS shown in the agent
+  trace. Sandbox simulator by default; flips to the real provisioned app
+  (APP_139265, whitelisted test number) via `BDAPPS_SANDBOX=false` + API key.
 - ⬜ Market price intelligence (sell/store/wait)
 - ⬜ Marketplace / supplier comparison
 - ⬜ Plant disease detection from images

@@ -52,8 +52,22 @@ class Settings(BaseSettings):
     # --- bdapps CaaS ---
     bdapps_app_id: str = ""
     bdapps_app_password: str = ""
-    bdapps_caas_url: str = "https://developer.bdapps.com/cass/send"
+    # Direct Debit endpoint per the official BDApps API Guide v1.1.3 §5.3
+    # ("charges a specific amount from a subscriber's account").
+    bdapps_caas_url: str = "https://developer.bdapps.com/caas/direct/debit"
+    # SMS Send endpoint per §3.1 — used to deliver the paid weather/pest alert.
+    bdapps_sms_url: str = "https://developer.bdapps.com/sms/send"
     bdapps_sandbox: bool = True
+    # --- Live relay (to satisfy bdapps' originating-IP allowlist) ---
+    # bdapps only accepts CaaS/SMS requests from a whitelisted host IP
+    # (e.g. 103.108.140.219). When the backend runs elsewhere (a laptop),
+    # point these at a thin PHP relay deployed ON that host: the backend POSTs
+    # the transaction to the relay, and the relay makes the real bdapps call
+    # from the allowed IP. Empty = call bdapps directly (only works when the
+    # backend itself runs on the whitelisted host). See bdapps-relay/.
+    bdapps_relay_url: str = ""      # e.g. https://103.108.140.219/agri/charge.php
+    bdapps_sms_relay_url: str = ""  # e.g. https://103.108.140.219/agri/sms.php
+    bdapps_relay_secret: str = ""   # shared secret the relay checks
 
     # --- App ---
     app_env: str = "development"

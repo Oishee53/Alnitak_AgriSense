@@ -10,7 +10,16 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.memory.db import Base
@@ -80,6 +89,29 @@ class TraceEntry(Base):
     params: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     result: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
+class Receipt(Base):
+    """A persisted bdapps CaaS charge (Tier 2).
+
+    Every checkout — success or failure — is stored so the payment history
+    survives reloads/restarts and a judge can audit what was charged, to whom,
+    and with which bdapps transaction id.
+    """
+
+    __tablename__ = "receipts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    session_id: Mapped[str] = mapped_column(ForeignKey("sessions.id"), index=True)
+    external_trx_id: Mapped[str] = mapped_column(String, index=True)
+    subscriber_id: Mapped[str] = mapped_column(String)
+    amount_bdt: Mapped[float] = mapped_column(Float)
+    status_code: Mapped[str] = mapped_column(String)
+    status_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    success: Mapped[bool] = mapped_column(Boolean, default=False)
+    mode: Mapped[str] = mapped_column(String, default="sandbox")
+    items: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
 

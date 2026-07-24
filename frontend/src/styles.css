@@ -267,3 +267,39 @@ body { margin: 0; background: var(--bg); color: var(--ink); }
 .session-item.active { border-color: var(--accent); background: #1d2f24; }
 .session-label { font-size: 0.85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .session-meta { font-size: 0.72rem; color: var(--muted); }
+
+/* ---- Payment (Tier 2 — bdapps CaaS) ---- */
+.payment h2 { display: flex; align-items: center; gap: 0.5rem; }
+.badge { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.05em; padding: 0.1rem 0.4rem; border-radius: 5px; text-transform: uppercase; }
+.badge.sandbox { color: var(--warn); border: 1px solid var(--warn); background: rgba(224, 164, 88, 0.1); }
+.badge.live { color: #08130a; border: 1px solid var(--accent); background: var(--accent); }
+.payment .total-row td { font-weight: 700; color: var(--accent-2); border-bottom: none; border-top: 2px solid var(--border); }
+.pay-field { display: flex; flex-direction: column; gap: 0.3rem; margin: 0.9rem 0 0.6rem; }
+.pay-field span { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+.pay-field input { padding: 0.55rem 0.6rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--ink); font-size: 0.95rem; }
+.pay-btn { width: 100%; padding: 0.7rem 1rem; border: 0; border-radius: 8px; background: var(--accent); color: #08130a; font-weight: 700; font-size: 0.95rem; cursor: pointer; }
+.pay-btn:hover:not(:disabled) { background: var(--accent-2); }
+.pay-btn:disabled { opacity: 0.5; cursor: default; }
+.pay-error { color: #ef5350; font-size: 0.85rem; margin: 0.5rem 0 0; }
+.receipt { margin-top: 0.9rem; border-radius: 10px; padding: 0.75rem 0.85rem; background: var(--panel-2); border: 1px solid var(--accent); }
+.receipt.declined { border-color: #ef5350; }
+.receipt-head { display: flex; align-items: center; gap: 0.6rem; }
+.receipt-head .tick { width: 26px; height: 26px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--accent); color: #08130a; font-weight: 800; }
+.receipt.declined .tick { background: #ef5350; }
+.receipt-head strong { font-size: 0.95rem; }
+.receipt-head .amt { margin-left: auto; font-size: 1.1rem; font-weight: 700; color: var(--accent-2); }
+.receipt .metrics { margin-top: 0.6rem; }
+.receipt .metrics dd { font-family: ui-monospace, "Cascadia Code", monospace; font-size: 0.82rem; }
+.payment .history { margin-top: 0.4rem; }
+.payment .mono, .receipt .metrics dd { font-family: ui-monospace, "Cascadia Code", monospace; }
+.payment .mono { font-size: 0.76rem; }
+.ok-text { color: var(--accent-2); font-weight: 600; }
+.declined-text { color: #ef5350; font-weight: 600; }
+.assumptions code { background: var(--bg); padding: 0.05rem 0.3rem; border-radius: 4px; font-size: 0.9em; }
+.sms-status { margin-top: 0.6rem; border-top: 1px dashed var(--border); padding-top: 0.6rem; font-size: 0.85rem; }
+.sms-status.ok strong { color: var(--accent-2); }
+.sms-status.fail strong { color: #ef5350; }
+.sms-preview { color: var(--muted); font-style: italic; margin-top: 0.25rem; line-height: 1.4; }
+.plan-lock { margin-top: 0.9rem; border: 1px dashed var(--warn); border-radius: 10px; padding: 0.75rem 0.85rem; background: rgba(224, 164, 88, 0.07); display: flex; flex-direction: column; gap: 0.6rem; }
+.plan-lock-text { font-size: 0.88rem; line-height: 1.45; }
+.plan-lock .pay-btn { width: auto; align-self: flex-start; padding: 0.55rem 1rem; }

@@ -68,6 +68,10 @@ def ingest() -> int:
     """Ingest every .md/.txt under KB_DIR into Chroma. Returns #chunks indexed."""
     import chromadb
 
+    from app.rag.embeddings import use_local_model_cache
+
+    use_local_model_cache()  # keep the ONNX model on the project drive, not C:
+
     files = sorted(
         f
         for f in glob.glob(os.path.join(settings.kb_dir, "**", "*"), recursive=True)

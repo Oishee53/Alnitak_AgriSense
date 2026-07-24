@@ -20,6 +20,9 @@ def _get_collection():
     if _collection is None:
         import chromadb
 
+        from app.rag.embeddings import use_local_model_cache
+
+        use_local_model_cache()  # keep the ONNX model on the project drive, not C:
         client = chromadb.PersistentClient(path=settings.chroma_dir)
         _collection = client.get_collection(COLLECTION)
     return _collection

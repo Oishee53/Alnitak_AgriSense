@@ -37,12 +37,20 @@ function monthKey(iso) {
   return { key: `${y}-${m}`, label: `${MONTHS[m - 1]} ${y}` };
 }
 
-export default function PlanView({ plan }) {
+// Free preview shows the first N stages; the full dated calendar is the paid
+// deliverable (unlocked by the 1 BDT bdapps CaaS checkout on the Premium tab).
+const FREE_PREVIEW_STAGES = 3;
+
+export default function PlanView({ plan, paid = false, onGoPremium }) {
   if (!plan || plan.error) return null;
+
+  const allStages = plan.stages || [];
+  const stages = paid ? allStages : allStages.slice(0, FREE_PREVIEW_STAGES);
+  const lockedCount = allStages.length - stages.length;
 
   // Group stages into consecutive month buckets (preserving order).
   const groups = [];
-  for (const st of plan.stages || []) {
+  for (const st of stages) {
     const { key, label } = monthKey(st.date);
     let g = groups.find((x) => x.key === key);
     if (!g) {
@@ -88,6 +96,19 @@ export default function PlanView({ plan }) {
           </div>
         ))}
       </div>
+
+      {lockedCount > 0 && (
+        <div className="plan-lock">
+          <div className="plan-lock-text">
+            🔒 <strong>{lockedCount} more dated stages</strong> — fertilizer
+            top-dressings, irrigations, pest checkpoints and harvest — in the
+            full calendar, plus your alerts by SMS.
+          </div>
+          <button className="pay-btn" onClick={() => onGoPremium?.()}>
+            Unlock with 1 BDT (bdapps)
+          </button>
+        </div>
+      )}
 
       {plan.source && <p className="assumptions">Calendar source: {plan.source}</p>}
     </div>

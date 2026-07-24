@@ -74,9 +74,18 @@ class ChatResponse(BaseModel):
 # ---------- Payment (bdapps CaaS) ----------
 class CheckoutRequest(BaseModel):
     session_id: str
-    subscriber_id: str = Field(..., description="e.g. tel:8801XXXXXXXXX")
-    amount_bdt: float
-    items: list[dict[str, Any]] = Field(default_factory=list)
+    subscriber_id: str = Field(
+        ..., description="Farmer mobile number (01712345678 or tel:8801712345678)"
+    )
+    # Optional: when omitted, the server sums the priced item lines so the client
+    # cannot dictate a total that disagrees with the basket.
+    amount_bdt: Optional[float] = Field(
+        None, description="If omitted, computed from item lines (qty × unit_price_bdt)."
+    )
+    items: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Basket lines: {name, qty, unit_price_bdt}.",
+    )
 
 
 class CheckoutResponse(BaseModel):
@@ -86,3 +95,6 @@ class CheckoutResponse(BaseModel):
     status_detail: str
     amount_bdt: float
     receipt: dict[str, Any]
+    # The CaaS request + response as trace steps, so the frontend can drop the
+    # charge straight into the visible agent trace.
+    trace: list[TraceStep] = []
