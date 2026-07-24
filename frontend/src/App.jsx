@@ -5,7 +5,9 @@ import ProfileCard from "./components/ProfileCard.jsx";
 import CropOptions from "./components/CropOptions.jsx";
 import PlanView from "./components/PlanView.jsx";
 import FinanceTable from "./components/FinanceTable.jsx";
-import { sendChat, getSession, getTrace } from "./lib/api.js";
+import WeatherAlerts from "./components/WeatherAlerts.jsx";
+import SessionList from "./components/SessionList.jsx";
+import { sendChat, getSession, getTrace, listSessions } from "./lib/api.js";
 
 const LS_KEY = "agrisense_session_id";
 
@@ -22,25 +24,51 @@ export default function App() {
   const [crops, setCrops] = useState(null);
   const [plan, setPlan] = useState(null);
   const [financials, setFinancials] = useState(null);
+  const [alerts, setAlerts] = useState(null); // weather_advisory artifact (Tier 1)
   const [busy, setBusy] = useState(false);
-  const [tab, setTab] = useState(null); // 'crops' | 'calendar' | 'finance'
+  const [tab, setTab] = useState(null); // 'crops' | 'calendar' | 'finance' | 'weather'
+  const [sessions, setSessions] = useState([]); // session history (sidebar)
+  const [showSessions, setShowSessions] = useState(false);
 
-  // Rehydrate a prior session on load (persistent memory across refreshes).
+  async function refreshSessions() {
+    try {
+      const res = await listSessions();
+      setSessions(res.sessions || []);
+    } catch {
+      /* sidebar is best-effort */
+    }
+  }
+
+  // Rehydrate a session: profile, chat history, artifacts AND persisted trace.
+  async function loadSession(id) {
+    try {
+      const snap = await getSession(id);
+      setSessionId(id);
+      localStorage.setItem(LS_KEY, id);
+      setMessages(snap.history || []);
+      setFarm(snap.farm);
+      setCrops(snap.crop_options);
+      setPlan(snap.season_plan);
+      setFinancials(snap.financials);
+      setAlerts(snap.weather_alerts);
+      if (snap.season_plan) setTab("calendar");
+      else if (snap.crop_options) setTab("crops");
+      else setTab(null);
+      const t = await getTrace(id);
+      setTrace(t.trace || []);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // On load: rehydrate the last session (persistent memory) + session list.
   useEffect(() => {
+    refreshSessions();
     if (!sessionId) return;
     (async () => {
-      try {
-        const snap = await getSession(sessionId);
-        setMessages(snap.history || []);
-        setFarm(snap.farm);
-        setCrops(snap.crop_options);
-        setPlan(snap.season_plan);
-        setFinancials(snap.financials);
-        if (snap.season_plan) setTab("calendar");
-        else if (snap.crop_options) setTab("crops");
-        const t = await getTrace(sessionId);
-        setTrace(t.trace || []);
-      } catch {
+      const ok = await loadSession(sessionId);
+      if (!ok) {
         localStorage.removeItem(LS_KEY); // stale id — start fresh
         setSessionId(null);
       }
@@ -55,9 +83,11 @@ export default function App() {
     if (res.crop_options) setCrops(res.crop_options);
     if (res.season_plan) setPlan(res.season_plan);
     if (res.financials) setFinancials(res.financials);
+    if (res.weather_alerts) setAlerts(res.weather_alerts);
     if (res.trace?.length) setTrace((t) => [...t, ...res.trace]);
     // Auto-focus the newest artifact so the user never has to hunt for it.
-    if (res.season_plan) setTab("calendar");
+    if (res.weather_alerts) setTab("weather");
+    else if (res.season_plan) setTab("calendar");
     else if (res.crop_options) setTab("crops");
   }
 
@@ -69,6 +99,7 @@ export default function App() {
       const res = await sendChat(sessionId, text);
       setMessages((m) => [...m, { role: "assistant", content: res.reply }]);
       applyResponse(res);
+      refreshSessions(); // keep the sidebar labels/counts current
     } catch (e) {
       setMessages((m) => [
         ...m,
@@ -88,15 +119,23 @@ export default function App() {
     setCrops(null);
     setPlan(null);
     setFinancials(null);
+    setAlerts(null);
     setTab(null);
   }
 
   // Which output panel to show: the selected tab if it still has data,
   // otherwise the most advanced artifact available.
-  const has = { crops: !!crops, calendar: !!plan, finance: !!financials };
+  const has = {
+    crops: !!crops,
+    calendar: !!plan,
+    finance: !!financials,
+    weather: !!alerts,
+  };
   const effectiveTab =
     tab && has[tab]
       ? tab
+      : has.weather
+      ? "weather"
       : has.calendar
       ? "calendar"
       : has.crops
@@ -110,12 +149,29 @@ export default function App() {
       <header className="topbar">
         <h1>🌾 AgriSense AI</h1>
         <span className="team">Team Alnitak · Bdapps Agentic AI Hackathon</span>
+        <button
+          className={`toggle-sessions ${showSessions ? "active" : ""}`}
+          onClick={() => setShowSessions((v) => !v)}
+        >
+          🗂️ Sessions{sessions.length ? ` (${sessions.length})` : ""}
+        </button>
         <button className="new-session" onClick={newSession}>
           ↻ New session
         </button>
       </header>
 
-      <main className="grid">
+      <main className={`grid ${showSessions ? "with-sidebar" : ""}`}>
+        {showSessions && (
+          <aside className="sidebar">
+            <SessionList
+              sessions={sessions}
+              currentId={sessionId}
+              busy={busy}
+              onSelect={loadSession}
+              onNew={newSession}
+            />
+          </aside>
+        )}
         <section className="left">
           <ChatPanel messages={messages} busy={busy} onSend={handleSend} />
           <ProfileCard farm={farm} />
@@ -146,6 +202,14 @@ export default function App() {
                   💰 Finance
                 </button>
               )}
+              {has.weather && (
+                <button
+                  className={effectiveTab === "weather" ? "active" : ""}
+                  onClick={() => setTab("weather")}
+                >
+                  🌦️ Weather alerts
+                </button>
+              )}
             </div>
           )}
 
@@ -170,6 +234,7 @@ export default function App() {
           )}
           {effectiveTab === "calendar" && <PlanView plan={plan} />}
           {effectiveTab === "finance" && <FinanceTable financials={financials} />}
+          {effectiveTab === "weather" && <WeatherAlerts data={alerts} />}
         </section>
 
         <aside className="right">

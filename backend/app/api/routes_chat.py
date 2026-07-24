@@ -44,6 +44,12 @@ async def chat(req: ChatRequest) -> ChatResponse:
         return result
 
 
+@router.get("/sessions")
+async def list_sessions() -> dict:
+    """Recent sessions (persistent memory) for the session-history sidebar."""
+    return {"sessions": store.list_sessions()}
+
+
 @router.get("/session/{session_id}", response_model=ChatResponse)
 async def get_session(session_id: str) -> ChatResponse:
     """Rehydrate a prior session (persistent memory / cross-session)."""
