@@ -6,8 +6,22 @@ Import the singleton `settings` anywhere: `from app.config import settings`.
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# backend/ — the anchor for every on-disk path below. Storage locations must NOT
+# depend on the current working directory: launching uvicorn from the repo root
+# instead of backend/ would otherwise silently create a SECOND, empty database
+# and Chroma index, which looks exactly like "all my sessions and traces
+# vanished". Anchoring here means the same data is found from anywhere.
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+
+
+def _anchor(path: str) -> str:
+    """Resolve a possibly-relative path against backend/."""
+    p = Path(path)
+    return str(p if p.is_absolute() else (BACKEND_DIR / p).resolve())
 
 
 class Settings(BaseSettings):
@@ -46,6 +60,21 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    def model_post_init(self, __context) -> None:
+        """Pin every storage path to backend/ so the data found is the same no
+        matter which directory the process was started from."""
+        object.__setattr__(self, "chroma_dir", _anchor(self.chroma_dir))
+        object.__setattr__(self, "kb_dir", _anchor(self.kb_dir))
+
+        # sqlite:///relative/path -> sqlite:////absolute/path
+        url = self.database_url
+        if url.startswith("sqlite:///") and not url.startswith("sqlite:////"):
+            raw = url[len("sqlite:///") :]
+            if raw and raw != ":memory:" and not Path(raw).is_absolute():
+                object.__setattr__(
+                    self, "database_url", "sqlite:///" + _anchor(raw).replace("\\", "/")
+                )
 
 
 @lru_cache
