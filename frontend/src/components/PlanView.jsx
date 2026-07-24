@@ -3,6 +3,7 @@
 //   • Calendar — a real month grid with each stage in its day box.
 // Either can be popped into a full-screen modal for a focused view.
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import CalendarView from "./CalendarView.jsx";
 
 const STAGE_TYPES = [
@@ -91,7 +92,10 @@ function Modal({ title, onClose, children }) {
     };
   }, [onClose]);
 
-  return (
+  // Portal straight to <body> so the fixed-position backdrop is always
+  // anchored to the real viewport, never trapped by an ancestor card's
+  // stacking/containing-block context (animations, transforms, etc.).
+  return createPortal(
     <div className="modal-backdrop" onClick={onClose}>
       <div
         className="modal"
@@ -108,7 +112,8 @@ function Modal({ title, onClose, children }) {
         </div>
         <div className="modal-body">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
