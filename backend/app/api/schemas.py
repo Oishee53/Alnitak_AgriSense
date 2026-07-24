@@ -62,6 +62,7 @@ class ChatResponse(BaseModel):
     crop_options: Optional[dict[str, Any]] = None  # {options: [...], kb_references, note}
     season_plan: Optional[dict[str, Any]] = None
     financials: Optional[dict[str, Any]] = None
+    weather_alerts: Optional[dict[str, Any]] = None  # weather_advisory result (Tier 1)
     # Prior conversation, returned when rehydrating a session (memory).
     history: Optional[list[dict[str, str]]] = None
 

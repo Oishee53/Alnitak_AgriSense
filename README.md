@@ -70,8 +70,8 @@ written to a **trace** that the frontend renders live.
 | **0** | Explained reasoning | prompts + tool outputs carry `because` fields | done |
 | **0** | Knowledge base + RAG | `rag/`, `data/knowledge_base/` | done |
 | **0** | Visible agent trace | `agent/trace.py`, frontend `TracePanel` | done |
-| **1** | Persistent memory (cross-session) | `memory/` | done (SQLite; survives restarts) |
-| **1** | Proactive weather-triggered advice | `tools/weather.py` + `agent` | stub |
+| **1** | Persistent memory (cross-session) | `memory/` (+ session-history sidebar, persisted agent trace) | done (SQLite; survives restarts) |
+| **1** | Proactive weather-triggered advice | `tools/advisory.py` + `WeatherAlerts` panel | done (live forecast × dated plan → alerts, e.g. "delay urea before heavy rain") |
 | **1** | Fertilizer / irrigation scheduler | `tools/fertilizer.py` | stub |
 | **1** | Pest & disease risk | `tools/pests.py` | stub |
 | **1** | Scenario simulation (what-if) | `tools/scenario.py` | stub |

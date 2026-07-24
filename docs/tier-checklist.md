@@ -18,8 +18,11 @@ Legend: ⬜ not started · 🟨 in progress · ✅ done
   rendered in the UI trace panel per turn
 
 ## Tier 1 — Advanced (differentiators)
-- ✅ Persistent memory (cross-session — SQLite; profile/history/plan survive restarts)
-- ⬜ Proactive weather-triggered advice
+- ✅ Persistent memory (cross-session — SQLite; profile/history/plan survive
+  restarts; session-history sidebar; agent trace persisted too)
+- ✅ Proactive weather-triggered advice (`weather_advisory` tool: live forecast
+  cross-checked against the dated plan → "delay urea before heavy rain" alerts,
+  KB-grounded thresholds, rendered in a Weather alerts panel)
 - ⬜ Fertilizer & irrigation scheduler
 - ⬜ Pest & disease risk
 - ⬜ Scenario simulation (what-if)

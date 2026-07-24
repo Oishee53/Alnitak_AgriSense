@@ -15,6 +15,11 @@ backend/data/*.db
 backend/data/*.sqlite3
 *.log
 
+# ---- Redirected pip / npm caches (kept off the full system drive) ----
+pip-tmpcache/
+pip-tmpnpm-cache/
+pip-tmp/
+
 # ---- Node / frontend ----
 node_modules/
 frontend/dist/
