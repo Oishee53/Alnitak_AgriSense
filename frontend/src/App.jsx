@@ -172,8 +172,14 @@ export default function App() {
 
   return (
     <div className="app">
+      {busy && <div className="loadbar" aria-hidden="true" />}
+
       <header className="topbar">
-        <h1>🌾 AgriSense AI</h1>
+        <h1 aria-label="AgriSense AI">
+          <span className="w" aria-hidden="true">🌾</span>{" "}
+          <span className="w" aria-hidden="true">AgriSense</span>{" "}
+          <span className="w accent" aria-hidden="true">AI</span>
+        </h1>
         <span className="team">Team Alnitak · Bdapps Agentic AI Hackathon</span>
         <button
           className={`toggle-sessions ${showSessions ? "active" : ""}`}
@@ -216,6 +222,8 @@ export default function App() {
             </div>
           )}
 
+          {busy && !effectiveTab && <OutputSkeleton />}
+
           {effectiveTab === "crops" && (
             <CropOptions
               data={crops}
@@ -247,6 +255,26 @@ export default function App() {
           <TracePanel trace={trace} />
         </aside>
       </main>
+    </div>
+  );
+}
+
+// Shimmering placeholder that mirrors the shape of the oncoming output card
+// (title → chips → ranked tiles) so the layout doesn't jump when data lands.
+function OutputSkeleton() {
+  return (
+    <div className="card" aria-hidden="true">
+      <div className="skeleton">
+        <div className="sk sk-title" />
+        <div className="sk-grid">
+          <div className="sk sk-chip" />
+          <div className="sk sk-chip" />
+          <div className="sk sk-chip" />
+        </div>
+        <div className="sk sk-tall" />
+        <div className="sk sk-tall" />
+        <div className="sk sk-row" style={{ width: "70%" }} />
+      </div>
     </div>
   );
 }
