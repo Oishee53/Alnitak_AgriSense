@@ -35,7 +35,9 @@ async def chat(req: ChatRequest) -> ChatResponse:
         # request's saved messages, not a stale snapshot.
         state = store.get_or_create_session(req.session_id)
         try:
-            result = await _orchestrator.run(state=state, message=req.message)
+            result = await _orchestrator.run(
+                state=state, message=req.message, lang=req.lang
+            )
         except RuntimeError as e:  # e.g. missing OPENAI_API_KEY
             raise HTTPException(status_code=503, detail=str(e))
         except Exception as e:

@@ -15,11 +15,11 @@ async function jsonOrThrow(res) {
   return res.json();
 }
 
-export async function sendChat(sessionId, message) {
+export async function sendChat(sessionId, message, lang) {
   const res = await fetch(`${BASE}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ session_id: sessionId, message }),
+    body: JSON.stringify({ session_id: sessionId, message, lang }),
   });
   return jsonOrThrow(res); // -> ChatResponse
 }
@@ -75,4 +75,13 @@ export async function listReceipts(sessionId) {
 export async function getPaymentMode() {
   const res = await fetch(`${BASE}/api/payment/mode`);
   return jsonOrThrow(res); // -> { sandbox: bool, app_id }
+}
+
+export async function diagnose(sessionId, imageDataUrl, crop) {
+  const res = await fetch(`${BASE}/api/diagnose`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_id: sessionId, image: imageDataUrl, crop }),
+  });
+  return jsonOrThrow(res); // -> { diagnosis, trace }
 }

@@ -95,6 +95,22 @@ def save_turn(state: SessionState, user_message: str, result: ChatResponse) -> N
         db.commit()
 
 
+def persist_artifacts(state: SessionState) -> None:
+    """Persist just the current artifacts snapshot (no new chat messages).
+
+    Used by out-of-band producers like the photo-diagnosis endpoint, which add
+    an artifact without a full chat turn.
+    """
+    with SessionLocal() as db:
+        row = db.get(Session, state.id)
+        if row is None:
+            row = Session(id=state.id)
+            db.add(row)
+        row.profile_snapshot = dict(state.profile)
+        row.latest_plan = dict(state.artifacts)
+        db.commit()
+
+
 def load_trace(session_id: str) -> list[dict[str, Any]]:
     """Return the persisted trace for a session (renumbered sequentially)."""
     with SessionLocal() as db:
@@ -247,4 +263,7 @@ def load_session_snapshot(session_id: str) -> ChatResponse:
         pest_risk=arts.get("pest_risk"),
         scenario=arts.get("scenario"),
         weather_alerts=arts.get("weather_alerts"),
+        market=arts.get("market"),
+        suppliers=arts.get("suppliers"),
+        disease=arts.get("disease"),
     )

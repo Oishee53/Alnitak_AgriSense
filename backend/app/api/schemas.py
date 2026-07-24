@@ -40,6 +40,9 @@ class ChatRequest(BaseModel):
         None, description="Omit to start a new session; reuse to keep memory."
     )
     message: str
+    lang: Optional[str] = Field(
+        None, description="UI language for the reply: 'bn' for Bengali, else English."
+    )
 
 
 class TraceStep(BaseModel):
@@ -67,6 +70,10 @@ class ChatResponse(BaseModel):
     pest_risk: Optional[dict[str, Any]] = None
     scenario: Optional[dict[str, Any]] = None
     weather_alerts: Optional[dict[str, Any]] = None  # weather_advisory result (Tier 1)
+    # Tier-2 artifacts:
+    market: Optional[dict[str, Any]] = None  # get_market_prices result
+    suppliers: Optional[dict[str, Any]] = None  # compare_suppliers result
+    disease: Optional[dict[str, Any]] = None  # detect_disease (photo) result
     # Prior conversation, returned when rehydrating a session (memory).
     history: Optional[list[dict[str, str]]] = None
 

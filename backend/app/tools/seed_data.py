@@ -31,6 +31,18 @@ def market_prices() -> dict[str, Any]:
         return json.load(fh)["prices"]
 
 
+@lru_cache
+def fertilizer_reference() -> dict[str, Any]:
+    with open(_SEED_DIR / "fertilizer_reference.json", encoding="utf-8") as fh:
+        return json.load(fh)["crops"]
+
+
+@lru_cache
+def suppliers() -> list[dict[str, Any]]:
+    with open(_SEED_DIR / "suppliers.json", encoding="utf-8") as fh:
+        return json.load(fh)["suppliers"]
+
+
 def normalize_season(season: str | None) -> str | None:
     """Map free-text season names to canonical: kharif-1, kharif-2, rabi."""
     if not season:

@@ -33,7 +33,42 @@ _ARTIFACT_SLOTS = {
     "assess_pest_risk": "pest_risk",
     "simulate_scenario": "scenario",
     "weather_advisory": "weather_alerts",
+    "get_market_prices": "market",
+    "compare_suppliers": "suppliers",
 }
+
+# Artifacts that describe ONE chosen crop. When the farmer switches crop, any of
+# these left over from the previous crop are stale and must be dropped — else the
+# UI shows, say, a Brinjal season plan next to Aman market prices. Each carries a
+# "crop" field we compare against.
+_CROP_KEYED_SLOTS = {
+    "season_plan",
+    "financials",
+    "fertilizer_schedule",
+    "pest_risk",
+    "scenario",
+    "weather_alerts",
+    "market",
+    "suppliers",
+}
+
+
+def _evict_stale_crop_artifacts(artifacts: dict[str, Any], slot: str, result: Any) -> None:
+    """Drop crop-keyed artifacts belonging to a different crop than `result`.
+
+    Called after storing a crop-keyed artifact: if the farmer has moved to a new
+    crop, the previous crop's plan/finance/market/supplier/etc. panels are
+    removed so every visible panel is about the same, current crop.
+    """
+    if slot not in _CROP_KEYED_SLOTS or not isinstance(result, dict):
+        return
+    new_crop = result.get("crop")
+    if not new_crop:
+        return
+    for other in _CROP_KEYED_SLOTS - {slot}:
+        art = artifacts.get(other)
+        if isinstance(art, dict) and art.get("crop") and art["crop"] != new_crop:
+            artifacts.pop(other, None)
 
 _REQUIRED_FIELDS = {
     "location",
@@ -234,7 +269,9 @@ class Orchestrator:
             if field in _REQUIRED_FIELDS and value not in (None, "") and not state.profile.get(field):
                 state.profile[field] = value
 
-    async def run(self, state: SessionState, message: str) -> ChatResponse:
+    async def run(
+        self, state: SessionState, message: str, lang: str | None = None
+    ) -> ChatResponse:
         """Handle one farmer message end to end."""
         sid = state.id
         turn_start = len(trace_mod.get_trace(sid))
@@ -252,7 +289,7 @@ class Orchestrator:
         last_weather: dict[str, Any] | None = state.artifacts.get("weather")
 
         for _ in range(MAX_STEPS):
-            system = build_system_prompt(state.profile, state.missing_fields())
+            system = build_system_prompt(state.profile, state.missing_fields(), lang)
             resp = await self.llm.complete(
                 system=system, messages=conversation, tools=tool_schemas()
             )
@@ -313,6 +350,8 @@ class Orchestrator:
                 slot = _ARTIFACT_SLOTS.get(call["name"])
                 if slot and isinstance(result, dict) and "error" not in result:
                     state.artifacts[slot] = result
+                    # Switching crop invalidates the other crop's panels.
+                    _evict_stale_crop_artifacts(state.artifacts, slot, result)
 
                 # Remember the live forecast so later tools this turn — and in
                 # later turns — can be grounded in it.
@@ -352,6 +391,9 @@ class Orchestrator:
             pest_risk=arts.get("pest_risk"),
             scenario=arts.get("scenario"),
             weather_alerts=arts.get("weather_alerts"),
+            market=arts.get("market"),
+            suppliers=arts.get("suppliers"),
+            disease=arts.get("disease"),
         )
 
     @staticmethod
@@ -415,6 +457,21 @@ class Orchestrator:
                     f"{result.get('baseline', {}).get('net_profit_bdt', 0):,} → "
                     f"{result.get('scenario', {}).get('net_profit_bdt', 0):,} BDT "
                     f"({result.get('net_profit_change_bdt', 0):+,.0f})"
+                )
+            if tool == "get_market_prices":
+                t = result.get("trend", {})
+                return (
+                    f"{result.get('crop')}: {result.get('current_price_bdt')} BDT/"
+                    f"{result.get('unit')} ({t.get('direction')} "
+                    f"{t.get('change_pct_recent', 0):+g}%) → {result.get('recommendation')}"
+                )
+            if tool == "compare_suppliers":
+                sups = result.get("suppliers", [])
+                best = sups[0] if sups else {}
+                return (
+                    f"{result.get('crop')}: {len(sups)} suppliers priced; cheapest "
+                    f"{best.get('name')} {best.get('total_input_cost_bdt', 0):,} BDT "
+                    f"(saves {result.get('savings_vs_worst_bdt', 0):,})"
                 )
         if isinstance(result, list):
             return f"{len(result)} result(s)"

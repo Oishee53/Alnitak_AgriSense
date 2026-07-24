@@ -113,6 +113,35 @@ class LLMClient:
             "stop_reason": choice.finish_reason,
         }
 
+    async def vision_json(
+        self, system: str, user: str, image_data_url: str
+    ) -> dict[str, Any]:
+        """Send an image + prompt to the vision model and parse a JSON reply.
+
+        `image_data_url` is a data: URL (data:image/jpeg;base64,...). Uses JSON
+        mode so the diagnosis is always structured. Returns {} on any failure so
+        the caller can surface a friendly error instead of crashing.
+        """
+        try:
+            resp = await self._get_client().chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system},
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": user},
+                            {"type": "image_url", "image_url": {"url": image_data_url}},
+                        ],
+                    },
+                ],
+                response_format={"type": "json_object"},
+                max_tokens=700,
+            )
+            return json.loads(resp.choices[0].message.content or "{}")
+        except Exception:
+            return {}
+
     async def extract_json(self, system: str, user: str) -> dict[str, Any]:
         """Structured JSON extraction (used for deterministic intake capture).
 

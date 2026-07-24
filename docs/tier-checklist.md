@@ -28,18 +28,36 @@ Legend: ⬜ not started · 🟨 in progress · ✅ done
 - ⬜ Scenario simulation (what-if)
 
 ## Tier 2 — Ambitious (bonus, only after Tier 0 solid)
-- ✅ bdapps CaaS payment + SMS delivery — honest freemium: the season calendar
-  shows a 3-stage free preview; a 1 BDT Direct Debit (BDApps API Guide §5.3,
-  `caas/direct/debit`) unlocks the full dated calendar AND sends the farmer's
-  first weather/pest alert via SMS Send (§3.1, `sms/send`). Subscriber number
-  normalized to `tel:8801XXXXXXXXX`, basket summed server-side, password
-  masked, receipt persisted (`receipts` table), charge + SMS shown in the agent
-  trace. Sandbox simulator by default; flips to the real provisioned app
-  (APP_139265, whitelisted test number) via `BDAPPS_SANDBOX=false` + API key.
-- ⬜ Market price intelligence (sell/store/wait)
-- ⬜ Marketplace / supplier comparison
-- ⬜ Plant disease detection from images
-- ⬜ Bengali / voice interaction
+- ✅ bdapps CaaS payment + SMS delivery — all in-app advice (incl. the full
+  season calendar) is free; the Premium tab is an optional add-on: a 1 BDT
+  Direct Debit (BDApps API Guide §5.3, `caas/direct/debit`) subscribes the
+  farmer to season-long weather/pest alerts, delivered via SMS Send (§3.1,
+  `sms/send`) to their phone. Subscriber number normalized to
+  `tel:8801XXXXXXXXX`, basket summed server-side, password masked, receipt
+  persisted (`receipts` table), charge + SMS shown in the agent trace. Sandbox
+  simulator by default; flips to the real provisioned app (APP_139290,
+  whitelisted test number) via `BDAPPS_SANDBOX=false` + API key, with a PHP
+  relay (see `bdapps-relay/`) to satisfy bdapps' originating-IP allowlist.
+- ✅ Market price intelligence (`get_market_prices`) — current price, recent
+  history + trend, and a SELL-NOW / STORE / WAIT call with reasoning that
+  accounts for whether the crop stores well; optional gross-revenue estimate at
+  today's price. Prices seeded/mock (disclosed). `MarketView` panel; tested.
+- ✅ Marketplace / supplier comparison (`compare_suppliers`) — sizes the farm's
+  fertilizer basket from the crop's FRG dose table × acres (sandy-soil MoP
+  bump), prices it at every supplier, ranks cheapest-first with BDT saved and
+  delivery/rating tradeoffs. Catalog seeded/mock (disclosed). `SupplierView`
+  panel; tested.
+- ✅ Plant disease detection from images (`detect_disease` + `/api/diagnose`) —
+  farmer uploads a leaf photo from the chat composer; a vision LLM identifies
+  the crop + disease/pest with confidence and visible symptoms, then the
+  treatment is KB-grounded (IPM-first, costed) where the condition matches
+  `pest_reference.json`, model-suggested otherwise (flagged). `DiseaseView`
+  panel with the photo, diagnosis and the "confirm with an extension officer"
+  disclaimer. Tested with a mocked vision call.
+- ✅ Bengali + voice interaction — EN/বাংলা toggle: the agent replies entirely
+  in Bengali while tool arguments stay English (deterministic tools keep
+  matching). 🎤 voice input via the Web Speech API (bn-BD / en-US per the
+  toggle) transcribes speech into the composer for low-literacy farmers.
 
 ## Judging weights (for prioritisation)
 Agentic behavior 20 · Accuracy & math 20 · Scope & execution 15 ·

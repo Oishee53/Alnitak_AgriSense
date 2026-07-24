@@ -18,9 +18,11 @@ from app.tools import (
     crops,
     fertilizer,
     finance,
+    market,
     pests,
     scenario,
     season_plan,
+    suppliers,
     weather,
 )
 
@@ -283,6 +285,55 @@ TOOLS: dict[str, Tool] = {
             "required": ["crop", "location"],
         },
         handler=advisory.weather_advisory,
+    ),
+    "get_market_prices": Tool(
+        name="get_market_prices",
+        description=(
+            "Market price intelligence (Tier 2): the current market price for a "
+            "crop, its recent price history and trend, and a concrete "
+            "SELL-NOW / STORE / WAIT recommendation with reasoning — accounting "
+            "for whether the crop stores well. Call this when the farmer asks "
+            "'what's the price', 'should I sell now or wait', 'where are prices "
+            "heading', or when advising on harvest timing / marketing. Pass "
+            "farm_size_acres to also get a gross-revenue estimate at today's "
+            "price. Prices are seeded/mock — say so. Use these numbers verbatim."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "crop": {"type": "string"},
+                "farm_size_acres": {"type": "number"},
+                "expected_yield_per_acre": {
+                    "type": "number",
+                    "description": "ONLY if the farmer stated their own yield; else omit to use reference yield",
+                },
+            },
+            "required": ["crop"],
+        },
+        handler=market.get_market_prices,
+    ),
+    "compare_suppliers": Tool(
+        name="compare_suppliers",
+        description=(
+            "Marketplace / supplier comparison (Tier 2): sizes the fertilizer "
+            "the farm actually needs (urea/TSP/MoP kg from the crop's FRG dose "
+            "table × farm size), then prices that exact basket at every supplier "
+            "and ranks them cheapest-first, with delivery/rating tradeoffs and "
+            "the money saved vs the priciest. Call this when the farmer asks "
+            "'where should I buy', 'which supplier is cheapest', or about input "
+            "shopping. Pass soil_type so sandy-soil MoP is sized right. The "
+            "supplier catalog is seeded/mock — say so. Use these numbers verbatim."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "crop": {"type": "string"},
+                "farm_size_acres": {"type": "number"},
+                "soil_type": {"type": "string"},
+            },
+            "required": ["crop", "farm_size_acres"],
+        },
+        handler=suppliers.compare_suppliers,
     ),
     "search_knowledge_base": Tool(
         name="search_knowledge_base",

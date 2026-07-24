@@ -11,7 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.api import routes_chat, routes_payment, routes_trace
+from app.api import routes_chat, routes_diagnose, routes_payment, routes_trace
 from app.memory.db import init_db
 
 
@@ -67,6 +67,7 @@ app.add_middleware(
 app.include_router(routes_chat.router)
 app.include_router(routes_trace.router)
 app.include_router(routes_payment.router)
+app.include_router(routes_diagnose.router)
 
 
 @app.get("/health", tags=["meta"])

@@ -68,6 +68,20 @@ Bangladesh. You are an AGENT, not a chatbot. Today's date is {today}.
   SAME turn call build_season_plan AND compute_financials and present both: the
   dated calendar and the itemized money table (total cost, yield, revenue, net
   profit, ROI, break-even). State the assumptions list from the tool.
+- WHICH CROP TO USE — CRITICAL: the crop named in the farmer's MOST RECENT
+  message is THE crop for every tool call this turn; pass it verbatim as the
+  `crop` argument. When they say "go with X", "let's do X", "switch to X",
+  "actually X", or otherwise name a crop, X is the crop — even if you previously
+  advised a different one, and even if X seems out of season. NEVER keep passing
+  the earlier crop once the farmer has named a new one. If X is out of season or
+  risky, still build for X and add a caveat; do not silently substitute another
+  crop.
+- CHANGING THE CROP: when the farmer switches to a different crop, everything
+  must move to the new crop together. In the SAME turn re-run for the new crop
+  EVERY panel you had already shown — build_season_plan, compute_financials, and
+  also get_market_prices and compare_suppliers if those were shown — so nothing
+  on screen still refers to the old crop. Never leave market or supplier figures
+  from the previous crop next to a new crop's plan.
 - FERTILIZER / IRRIGATION: when the farmer asks about fertilizer, urea, dose,
   "how much", top-dressing, irrigation timing, or organic/cowdung options, call
   build_fertilizer_schedule (pass soil_type, farm size, and the `daily` list
@@ -99,6 +113,16 @@ Bangladesh. You are an AGENT, not a chatbot. Today's date is {today}.
   "last week" from today's date) to weather_advisory AND build_season_plan.
   Omitting it silently re-anchors the plan to a future default date and the
   advice will be wrong for their real field.
+- MARKET PRICES (Tier 2): when the farmer asks about the price, whether to sell
+  now or wait/store, where prices are heading, or how much their harvest is
+  worth, call get_market_prices (pass farm_size_acres for a revenue estimate).
+  Lead with the SELL-NOW / STORE / WAIT recommendation and its because, quote the
+  current price and trend, and state that prices are seeded/mock, not a live feed.
+- SUPPLIERS (Tier 2): when the farmer asks where to buy inputs, which supplier is
+  cheapest, or about shopping for fertilizer/seed, call compare_suppliers (crop,
+  farm_size_acres, soil_type). Report the cheapest supplier for THEIR basket, the
+  BDT it saves vs the priciest, and the delivery/rating tradeoffs. Say the
+  catalog is seeded/mock. Use the kg and BDT figures verbatim.
 - If a tool returns an error, say what failed and continue with what you have —
   never fabricate a substitute value.
 - NEVER pass optional override parameters (expected price, expected yield, cost
@@ -112,6 +136,9 @@ Bangladesh. You are an AGENT, not a chatbot. Today's date is {today}.
 - Keep replies farmer-friendly: short paragraphs, concrete dates, BDT amounts,
   no jargon. Bengali terms (bigha, maund) are fine.
 
+## Language
+{language}
+
 ## Current farm profile (persistent memory)
 {profile_json}
 
@@ -119,10 +146,30 @@ Bangladesh. You are an AGENT, not a chatbot. Today's date is {today}.
 {missing}
 """
 
+# Language directives. Tool ARGUMENTS always stay English (crop names, enums);
+# only the prose the farmer reads changes.
+_LANG_DIRECTIVES = {
+    "bn": (
+        "Reply to the farmer ENTIRELY in Bengali (বাংলা). Use simple, everyday "
+        "Bangla a smallholder farmer understands; keep numbers, dates and BDT "
+        "amounts clear. Units like bigha/maund are natural in Bangla. IMPORTANT: "
+        "still pass all tool arguments (crop names, soil, season, enums) in "
+        "English — only your message to the farmer is in Bengali."
+    ),
+    "en": (
+        "Reply in clear, simple English. If the farmer writes in Bengali, mirror "
+        "them and reply in Bengali instead."
+    ),
+}
 
-def build_system_prompt(profile: dict[str, Any], missing: list[str]) -> str:
+
+def build_system_prompt(
+    profile: dict[str, Any], missing: list[str], lang: str | None = None
+) -> str:
+    directive = _LANG_DIRECTIVES.get((lang or "en").lower(), _LANG_DIRECTIVES["en"])
     return SYSTEM_PROMPT.format(
         today=date.today().isoformat(),
+        language=directive,
         profile_json=json.dumps(
             {k: v for k, v in profile.items() if v not in (None, "")},
             ensure_ascii=False,

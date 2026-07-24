@@ -75,9 +75,11 @@ written to a **trace** that the frontend renders live.
 | **1** | Fertilizer / irrigation scheduler | `tools/fertilizer.py` + `FertilizerView` | done (kg + cost per stage, organic option, FRG-2018 doses) |
 | **1** | Pest & disease risk | `tools/pests.py` + `PestRiskView` | done (stage × live-weather gated, IPM-first, costed) |
 | **1** | Scenario simulation (what-if) | `tools/scenario.py` + `ScenarioView` | done (re-runs the finance engine, diffs every figure) |
-| **2** | bdapps CaaS payment + SMS delivery | `bdapps/caas.py`, `bdapps/sms.py`, `api/routes_payment.py`, `PaymentPanel` | done (freemium: 1 BDT Direct Debit unlocks the full season calendar and sends the farmer's alert by SMS; receipt persisted, charge + SMS shown in trace; sandbox or live via provisioned app) |
-| **2** | Market price intelligence | `tools/market.py` | stub |
-| **2** | Bengali / voice | frontend + prompts | future |
+| **2** | bdapps CaaS payment + SMS delivery | `bdapps/caas.py`, `bdapps/sms.py`, `api/routes_payment.py`, `PaymentPanel` | done (all advice free; optional 1 BDT Direct Debit subscribes the farmer to season-long weather/pest **SMS alerts** to their phone; receipt persisted, charge + SMS shown in trace; sandbox or live via provisioned app + relay) |
+| **2** | Market price intelligence | `tools/market.py` + `MarketView` | done (current price, trend, sell/store/wait call w/ reasoning, revenue estimate; seeded prices) |
+| **2** | Marketplace / supplier comparison | `tools/suppliers.py` + `SupplierView` | done (sizes the farm's fertilizer basket, prices it at each supplier, ranks cheapest-first w/ savings + tradeoffs; seeded catalog) |
+| **2** | Plant disease detection (photo) | `tools/disease.py`, `api/routes_diagnose.py` + `DiseaseView` | done (vision LLM identifies the disease/pest from a leaf photo, KB-grounded IPM treatment + cost where matched; camera upload in chat) |
+| **2** | Bengali + voice interaction | `agent/prompts.py` (lang), `ChatPanel` | done (EN/বাংলা toggle → agent replies in Bengali, tool args stay English; 🎤 voice input via Web Speech API in bn-BD/en-US) |
 
 > Scope discipline: **Tier 0 must run end to end before any Tier 1/2 work.**
 
@@ -168,6 +170,8 @@ The hackathon README **must** state what is real vs mock. Keep this table honest
 | Pest treatment costs | MIXED | KB-stated where the source gives a figure; otherwise estimated — each entry declares which in `cost_basis` |
 | Market prices | **MOCK / seeded** | `data/seed/market_prices.json` (until a real feed is wired) |
 | Supplier catalog | **MOCK / seeded** | `data/seed/suppliers.json` |
+| Plant disease diagnosis (photo → condition) | **REAL** | OpenAI vision model on the farmer's uploaded photo |
+| Disease treatment / prevention / cost | **REAL (collected)** where matched | KB `data/seed/pest_reference.json`; falls back to model advice (flagged `kb_grounded:false`) |
 | bdapps CaaS charging | **SANDBOX / simulated** | `bdapps/caas.py` (mirrors bdapps CaaS request/response) |
 | LLM reasoning | REAL | OpenAI (gpt-4o-mini default, configurable) |
 

@@ -1,26 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { checkout, listReceipts, getPaymentMode } from "../lib/api.js";
 
-// Tier 2 — bdapps CaaS checkout. The farmer unlocks premium advisory by
-// charging their mobile-operator balance (Charging-as-a-Service). Line items
-// are priced, so the backend sums the basket itself; we never send a total the
-// server would have to trust. On success we push the bdapps request/response
-// into the live agent trace so a judge can see the real call.
-// Test price: 1 BDT, matching the charge configured on the provisioned bdapps
-// app (APP_139265). One purchase unlocks the full season calendar and sends
-// the farmer's first weather/pest alert by SMS.
+// Tier 2 — bdapps CaaS checkout. The in-app advice is free; this is an optional
+// add-on: the farmer pays 1 BDT from their mobile-operator balance (Charging-as-
+// a-Service) to get their season-long weather/pest alerts delivered by SMS to
+// their phone. Line items are priced, so the backend sums the basket itself; we
+// never send a total the server would have to trust. On success we push the
+// bdapps request/response into the live agent trace so a judge can see the real
+// call. Test price: 1 BDT, matching the charge configured on the provisioned
+// bdapps app (APP_139290).
 function defaultItems(crop) {
-  const plan = crop ? `${crop} season pack` : "season pack";
+  const label = crop ? `${crop} weather & pest SMS alerts` : "weather & pest SMS alerts";
   return [
     {
-      name: `AgriSense Premium — ${plan} (full calendar + SMS alerts)`,
+      name: `AgriSense — ${label} (season)`,
       qty: 1,
       unit_price_bdt: 1,
     },
   ];
 }
 
-export default function PaymentPanel({ sessionId, crop, onCharged, onPaid }) {
+export default function PaymentPanel({ sessionId, crop, onCharged }) {
   const [subscriber, setSubscriber] = useState("01712345678");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -68,7 +68,6 @@ export default function PaymentPanel({ sessionId, crop, onCharged, onPaid }) {
         status_detail: res.status_detail,
       });
       if (res.trace?.length) onCharged?.(res.trace);
-      if (res.success) onPaid?.();
       refreshHistory();
     } catch (e) {
       setError(e.message || "payment failed");
@@ -88,8 +87,9 @@ export default function PaymentPanel({ sessionId, crop, onCharged, onPaid }) {
         ) : null}
       </h2>
       <p className="hint">
-        Pay from your mobile balance to unlock the full season plan and
-        season-long weather &amp; pest SMS alerts — no card or bank needed.
+        All advice in the app is free. This optional add-on delivers your
+        season-long weather &amp; pest alerts by SMS to your phone — paid from
+        your mobile balance, no card or bank needed.
       </p>
 
       <table>
