@@ -25,8 +25,13 @@ def _anchor(path: str) -> str:
 
 
 class Settings(BaseSettings):
+    # env_file must be an ABSOLUTE path for the same reason the storage paths
+    # are anchored below: pydantic-settings resolves a relative env_file against
+    # the current working directory, so starting the server from the repo root
+    # instead of backend/ would silently load no .env at all — the app then
+    # reports "OPENAI_API_KEY is not set" while the file is sitting right there.
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+        env_file=str(BACKEND_DIR / ".env"), env_file_encoding="utf-8", extra="ignore"
     )
 
     # --- LLM (OpenAI) ---
