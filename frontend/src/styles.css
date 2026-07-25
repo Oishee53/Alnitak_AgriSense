@@ -94,13 +94,14 @@ body {
   flex-direction: column;
   gap: clamp(1rem, 1.8vw, 1.6rem);
   padding: clamp(1rem, 2.2vw, 2rem);
+  padding-top: 0;               /* navbar sits flush against the top — no gap */
   max-width: 1560px;
   margin: 0 auto;
 }
 
 .topbar {
   position: sticky;
-  top: clamp(0.5rem, 1.5vw, 1rem);
+  top: 0;                       /* pinned to the very top while scrolling */
   z-index: 30;
   display: flex;
   align-items: center;
@@ -123,17 +124,9 @@ body {
   line-height: 1;
   white-space: nowrap;
 }
+.topbar h1 { margin-inline-end: auto; }  /* push the nav controls to the right */
 .topbar h1 .w { display: inline-block; }
 .topbar h1 .accent { color: var(--green); font-style: italic; }
-.team {
-  font-size: 0.82rem;
-  color: var(--ink-3);
-  margin-right: auto;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-@media (max-width: 620px) { .team { display: none; } }
 
 .grid {
   display: grid;
@@ -144,11 +137,17 @@ body {
 .grid.with-sidebar {
   grid-template-columns: minmax(230px, 0.62fr) minmax(0, 1.55fr) minmax(280px, 0.8fr);
 }
+/* Trace panel hidden (toggled off in the nav): drop the right column. */
+.grid.no-trace { grid-template-columns: minmax(0, 1fr); }
+.grid.with-sidebar.no-trace {
+  grid-template-columns: minmax(230px, 0.62fr) minmax(0, 1.55fr);
+}
 .left { display: flex; flex-direction: column; gap: clamp(1rem, 1.8vw, 1.5rem); min-width: 0; }
 .right { position: sticky; top: 6rem; min-width: 0; }
 .sidebar { position: sticky; top: 6rem; min-width: 0; }
 @media (max-width: 1040px) {
-  .grid, .grid.with-sidebar { grid-template-columns: 1fr; }
+  .grid, .grid.with-sidebar,
+  .grid.no-trace, .grid.with-sidebar.no-trace { grid-template-columns: 1fr; }
   .right, .sidebar { position: static; }
 }
 
@@ -247,7 +246,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform
   color: #fff;
   border-color: var(--green-deep);
 }
-.toggle-sessions.active { background: var(--green-soft); color: var(--green-deep); border-color: var(--green); }
+.toggle-sessions.active,
+.toggle-trace.active { background: var(--green-soft); color: var(--green-deep); border-color: var(--green); }
 
 /* ============================================================================
    Chat
@@ -686,6 +686,25 @@ button.cal-cell:focus-visible { outline: 3px solid rgba(63, 125, 81, 0.4); outli
 .day-detail-item.harvest { border-left-color: var(--amber); }
 .day-detail-stage { font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem; }
 .day-detail-action { font-size: 0.9rem; color: var(--ink-2); margin-top: 0.2rem; line-height: 1.55; }
+
+/* Hover/focus popover anchored to a day cell (portaled to <body>). */
+.calv-hint { font-size: 0.8rem; color: var(--ink-3); margin: 0.1rem 0 0; font-style: italic; }
+.day-pop {
+  z-index: 150;                 /* above the modal backdrop (100) */
+  width: max-content;
+  max-width: 330px;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  box-shadow: var(--shadow-lg, 0 12px 34px rgba(31, 41, 34, 0.18));
+  pointer-events: none;         /* never steals hover / causes flicker */
+  animation: day-pop-in 0.14s var(--ease) both;
+}
+.day-pop .day-detail-date { margin-bottom: 0.5rem; }
+.day-pop .day-detail-item:last-child { margin-bottom: 0; }
+@keyframes day-pop-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .day-pop { animation: none; } }
 
 /* ============================================================================
    Modal — premium focused view (backdrop blur + soft scale-in)

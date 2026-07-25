@@ -45,6 +45,7 @@ export default function App() {
   const [tab, setTab] = useState(null);
   const [sessions, setSessions] = useState([]); // session history (sidebar)
   const [showSessions, setShowSessions] = useState(false);
+  const [showTrace, setShowTrace] = useState(true); // agent-trace panel (toggled from nav)
   // Reply language: 'en' or 'bn' (Bengali). Persisted so it survives reloads.
   const [lang, setLang] = useState(() => localStorage.getItem("agrisense_lang") || "en");
 
@@ -245,7 +246,6 @@ export default function App() {
           <span className="w" aria-hidden="true">AgriSense</span>{" "}
           <span className="w accent" aria-hidden="true">AI</span>
         </h1>
-        <span className="team">Team Alnitak · Bdapps Agentic AI Hackathon</span>
         <div className="lang-toggle" role="group" aria-label="Reply language">
           {[
             ["en", "EN"],
@@ -265,6 +265,13 @@ export default function App() {
           ))}
         </div>
         <button
+          className={`toggle-trace ${showTrace ? "active" : ""}`}
+          onClick={() => setShowTrace((v) => !v)}
+          aria-pressed={showTrace}
+        >
+          {lang === "bn" ? "🛠️ এজেন্ট ট্রেস" : "🛠️ Agent trace"}
+        </button>
+        <button
           className={`toggle-sessions ${showSessions ? "active" : ""}`}
           onClick={() => setShowSessions((v) => !v)}
         >
@@ -275,7 +282,11 @@ export default function App() {
         </button>
       </header>
 
-      <main className={`grid ${showSessions ? "with-sidebar" : ""}`}>
+      <main
+        className={`grid ${showSessions ? "with-sidebar" : ""} ${
+          showTrace ? "" : "no-trace"
+        }`}
+      >
         {showSessions && (
           <aside className="sidebar">
             <SessionList
@@ -370,9 +381,11 @@ export default function App() {
           )}
         </section>
 
-        <aside className="right">
-          <TracePanel trace={trace} />
-        </aside>
+        {showTrace && (
+          <aside className="right">
+            <TracePanel trace={trace} />
+          </aside>
+        )}
       </main>
     </div>
   );

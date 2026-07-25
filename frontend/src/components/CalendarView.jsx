@@ -1,9 +1,12 @@
 // Real month-grid calendar for the season plan. Renders each month that holds a
 // plan stage as a 7-column calendar; stages sit in their actual day boxes. The
-// sowing window is tinted, and clicking a day reveals its full stage detail.
-// Month/weekday names + legend labels follow the language toggle; stage DATA
-// (names, actions, because) stays English — the trace-checkable grounding.
+// sowing window is tinted, and HOVERING (or focusing) a day pops up its full
+// stage detail as a floating tooltip anchored to that day — instead of a panel
+// at the bottom of the list. Month/weekday names + legend labels follow the
+// language toggle; stage DATA (names, actions, because) stays English — the
+// trace-checkable grounding.
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { t, MONTHS_FULL, WEEKDAYS } from "../lib/i18n.js";
 import { localize, d as bd } from "../lib/bn.js";
 
@@ -23,7 +26,7 @@ const typeLabel = (ty, lang) => (lang === "bn" ? ty.bn : ty.label);
 const iso = (y, m, d) => `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 const parse = (s) => { const [y, m, d] = s.split("-").map(Number); return { y, m, d }; };
 
-function MonthGrid({ y, m, byDay, winStart, winEnd, anchor, onPick, selected, lang }) {
+function MonthGrid({ y, m, byDay, winStart, winEnd, anchor, onHover, onLeave, lang }) {
   const months = MONTHS_FULL[lang] || MONTHS_FULL.en;
   const weekdays = WEEKDAYS[lang] || WEEKDAYS.en;
   const firstWd = new Date(y, m - 1, 1).getDay();
@@ -49,14 +52,12 @@ function MonthGrid({ y, m, byDay, winStart, winEnd, anchor, onPick, selected, la
           const inWindow = winStart && winEnd && dk >= winStart && dk <= winEnd;
           const isAnchor = dk === anchor;
           const isToday = dk === todayIso;
-          const isSel = dk === selected;
           const cls = [
             "cal-cell",
             events.length ? "has-event" : "",
             inWindow ? "in-window" : "",
             isAnchor ? "anchor" : "",
             isToday ? "today" : "",
-            isSel ? "selected" : "",
           ].join(" ").trim();
           const cell = (
             <div className="cal-cell-date">{bd(d, lang)}</div>
@@ -64,11 +65,15 @@ function MonthGrid({ y, m, byDay, winStart, winEnd, anchor, onPick, selected, la
           if (!events.length) {
             return <div key={i} className={cls}>{cell}</div>;
           }
+          const show = (e) => onHover(dk, events, e.currentTarget.getBoundingClientRect());
           return (
             <button
               key={i}
               className={cls}
-              onClick={() => onPick(dk, events)}
+              onMouseEnter={show}
+              onMouseLeave={onLeave}
+              onFocus={show}
+              onBlur={onLeave}
               aria-label={`${months[m - 1]} ${d}: ${events.map((e) => e.stage).join(", ")}`}
             >
               {cell}
@@ -91,11 +96,50 @@ function MonthGrid({ y, m, byDay, winStart, winEnd, anchor, onPick, selected, la
   );
 }
 
-export default function CalendarView({ plan, large = false, lang = "en" }) {
-  const [sel, setSel] = useState(null); // { date, events }
-  if (!plan || plan.error) return null;
-
+// Floating tooltip anchored to a hovered/focused day cell. Portaled to <body>
+// with position:fixed so the day cells' `overflow:hidden` can't clip it, and a
+// z-index above the modal backdrop so it works in the expanded view too. It
+// flips above/below the cell depending on room, and stays clear of the pointer
+// (pointer-events:none) so it never flickers.
+function DayPopover({ detail, lang }) {
+  const { rect, date, events } = detail;
+  const { y, m, d } = parse(date);
   const months = MONTHS_FULL[lang] || MONTHS_FULL.en;
+  const above = rect.top > 260; // enough room overhead → show above the cell
+  const HALF = 165; // half of max-width, for viewport clamping
+  const style = {
+    position: "fixed",
+    left: Math.min(Math.max(rect.left + rect.width / 2, HALF + 8), window.innerWidth - HALF - 8),
+    top: above ? rect.top - 10 : rect.bottom + 10,
+    transform: above ? "translate(-50%, -100%)" : "translate(-50%, 0)",
+  };
+  return createPortal(
+    <div className={`day-pop ${above ? "above" : "below"}`} style={style} role="tooltip">
+      <div className="day-detail-date">
+        {months[m - 1]} {bd(d, lang)}, {bd(y, lang)}
+      </div>
+      {events.map((e, i) => {
+        const ty = classify(e.stage);
+        return (
+          <div key={i} className={`day-detail-item ${ty.cls}`}>
+            <div className="day-detail-stage">
+              <span>{ty.icon}</span> {localize(e.stage, lang)}
+            </div>
+            <div className="day-detail-action">{localize(e.action, lang)}</div>
+            {e.because && (
+              <div className="cal-because">{localize(e.because, lang)}</div>
+            )}
+          </div>
+        );
+      })}
+    </div>,
+    document.body
+  );
+}
+
+export default function CalendarView({ plan, large = false, lang = "en" }) {
+  const [hover, setHover] = useState(null); // { date, events, rect }
+  if (!plan || plan.error) return null;
 
   const byDay = new Map();
   const monthsMap = new Map();
@@ -117,12 +161,8 @@ export default function CalendarView({ plan, large = false, lang = "en" }) {
     present.set(ty.cls, ty);
   }
 
-  const pick = (date, events) => setSel({ date, events });
-  const detail = sel || {
-    date: plan.anchor_date,
-    events: byDay.get(plan.anchor_date) || [],
-  };
-  const detailDate = detail.date ? parse(detail.date) : null;
+  const onHover = (date, events, rect) => setHover({ date, events, rect });
+  const onLeave = () => setHover(null);
 
   return (
     <div className={`calv ${large ? "calv-large" : ""}`}>
@@ -136,8 +176,8 @@ export default function CalendarView({ plan, large = false, lang = "en" }) {
             winStart={winStart}
             winEnd={winEnd}
             anchor={plan.anchor_date}
-            onPick={pick}
-            selected={sel?.date}
+            onHover={onHover}
+            onLeave={onLeave}
             lang={lang}
           />
         ))}
@@ -154,29 +194,10 @@ export default function CalendarView({ plan, large = false, lang = "en" }) {
             <span className="legend-dot" /> {t(lang, "plan.legendWindow")}
           </span>
         </div>
-
-        {detail.events.length > 0 && detailDate && (
-          <div className="day-detail">
-            <div className="day-detail-date">
-              {months[detailDate.m - 1]} {bd(detailDate.d, lang)}, {bd(detailDate.y, lang)}
-            </div>
-            {detail.events.map((e, i) => {
-              const ty = classify(e.stage);
-              return (
-                <div key={i} className={`day-detail-item ${ty.cls}`}>
-                  <div className="day-detail-stage">
-                    <span>{ty.icon}</span> {localize(e.stage, lang)}
-                  </div>
-                  <div className="day-detail-action">{localize(e.action, lang)}</div>
-                  {e.because && (
-                    <div className="cal-because">{localize(e.because, lang)}</div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <p className="calv-hint">{t(lang, "plan.hoverHint")}</p>
       </div>
+
+      {hover && <DayPopover detail={hover} lang={lang} />}
     </div>
   );
 }

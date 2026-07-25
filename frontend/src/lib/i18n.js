@@ -86,6 +86,7 @@ const STR = {
   "plan.days": ["days", "দিন"],
   "plan.source": ["Calendar source:", "পঞ্জিকার সূত্র:"],
   "plan.legendWindow": ["Sowing window", "বপন সময়"],
+  "plan.hoverHint": ["Hover a marked day for its details", "বিস্তারিত দেখতে চিহ্নিত দিনে মাউস রাখুন"],
 
   // ---- finance ----
   "fin.title": ["Financial projection", "আর্থিক হিসাব"],
