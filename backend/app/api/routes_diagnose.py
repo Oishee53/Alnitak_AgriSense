@@ -23,6 +23,7 @@ class DiagnoseRequest(BaseModel):
     session_id: str
     image: str = Field(..., description="data: URL, e.g. data:image/jpeg;base64,…")
     crop: Optional[str] = None
+    lang: Optional[str] = None  # 'bn' → vision free-text in Bengali
 
 
 @router.post("/diagnose")
@@ -33,7 +34,7 @@ async def diagnose(req: DiagnoseRequest) -> dict[str, Any]:
 
     state = store.get_or_create_session(req.session_id)
     try:
-        result = await disease.detect_disease(req.image, crop=req.crop)
+        result = await disease.detect_disease(req.image, crop=req.crop, lang=req.lang)
     except RuntimeError as e:  # missing OPENAI_API_KEY
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:  # noqa: BLE001

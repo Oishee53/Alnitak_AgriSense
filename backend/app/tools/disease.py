@@ -35,6 +35,21 @@ _VISION_SYSTEM = (
     "false and condition unknown."
 )
 
+# Photo analysis is free-form (no fixed template to translate), so for Bengali
+# we ask the model to write the free-text fields in Bangla directly, while
+# keeping the structured enums + the English disease name (so KB matching and
+# the deterministic frontend tokens still work).
+_VISION_BN = (
+    "\nIMPORTANT: write visible_symptoms, reasoning and advice in BENGALI "
+    "(Bangla script), simple words a smallholder farmer understands. Keep "
+    "is_plant, condition, confidence, severity and name in ENGLISH exactly as "
+    "the enums above (name = the disease/pest common English name)."
+)
+
+
+def _vision_system(lang: str | None) -> str:
+    return _VISION_SYSTEM + (_VISION_BN if (lang or "en").lower() == "bn" else "")
+
 
 def _kb_match(crop_name: str | None, disease_name: str) -> dict[str, Any] | None:
     """Find the closest KB pest/disease entry for the identified condition.
@@ -78,12 +93,13 @@ async def detect_disease(
     image_data_url: str,
     crop: str | None = None,
     llm: LLMClient | None = None,
+    lang: str | None = None,
 ) -> dict[str, Any]:
     """Diagnose a crop photo and attach KB-grounded treatment where possible."""
     client = llm or LLMClient()
     hint = f" The farmer says this is {crop}." if crop else ""
     vision = await client.vision_json(
-        _VISION_SYSTEM,
+        _vision_system(lang),
         "Diagnose this crop photo." + hint,
         image_data_url,
     )

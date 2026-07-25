@@ -5,7 +5,7 @@
 // extension officer" disclaimer.
 
 import { t } from "../lib/i18n.js";
-import { localize, cropName } from "../lib/bn.js";
+import { localize, cropName, tk, unit } from "../lib/bn.js";
 
 const money = (v) => (v == null ? "—" : Number(v).toLocaleString());
 
@@ -44,13 +44,15 @@ export default function DiseaseView({ disease, image, lang = "en" }) {
         {image && <img className="disease-img" src={image} alt="uploaded crop" />}
         <div className="disease-head">
           <div className={`disease-dx ${healthy ? "healthy" : ""}`}>
-            {d.diagnosis}
+            {localize(disease.diagnosis, lang)}
           </div>
           <div className="disease-badges">
-            <span className={`badge ${confClass(d.confidence)}`}>
-              {d.confidence} {t(lang, "dz.confidence")}
+            <span className={`badge ${confClass(disease.confidence)}`}>
+              {tk(disease.confidence, lang)} {t(lang, "dz.confidence")}
             </span>
-            {d.severity && <span className="badge sev">{d.severity}</span>}
+            {disease.severity && (
+              <span className="badge sev">{tk(disease.severity, lang)}</span>
+            )}
             <span className={`badge ${d.kb_grounded ? "kb-yes" : "kb-no"}`}>
               {d.kb_grounded ? t(lang, "dz.kb") : t(lang, "dz.ai")}
             </span>
@@ -103,7 +105,7 @@ export default function DiseaseView({ disease, image, lang = "en" }) {
                 ? lang === "bn"
                   ? "শুধু ব্যবস্থাপনা"
                   : "management only"
-                : `${money(d.cost_bdt_per_acre[0])}–${money(d.cost_bdt_per_acre[1])} BDT`}
+                : `${money(d.cost_bdt_per_acre[0])}–${money(d.cost_bdt_per_acre[1])} ${unit("BDT", lang)}`}
             </dd>
           </div>
         )}

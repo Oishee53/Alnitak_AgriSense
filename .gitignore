@@ -41,3 +41,6 @@ Thumbs.db
 
 # Keep folder structure but ignore contents where noted
 !**/.gitkeep
+
+# Local scratch/temp (kept off C:)
+.tmp/

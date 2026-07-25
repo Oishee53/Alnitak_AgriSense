@@ -36,8 +36,9 @@ export const CROPS_BN = {
 
 export function cropName(name, lang) {
   if (lang !== "bn" || !name) return name;
-  const bn = CROPS_BN[name];
-  return bn ? `${bn} (${name})` : name;
+  // Bengali-only for low-literacy accessibility (fall back to English only if we
+  // have no Bangla name for the crop).
+  return CROPS_BN[name] || name;
 }
 
 // ---------------------------------------------------------------------------
@@ -74,9 +75,22 @@ const PLACES_BN = {
 export function placeName(loc, lang) {
   if (lang !== "bn" || !loc) return loc;
   const key = String(loc).trim();
-  const bn = PLACES_BN[key];
-  return bn ? `${bn} (${key})` : key; // unknown place: leave as-is
+  // Bengali-only; unknown place falls back to the original string.
+  return PLACES_BN[key] || key;
 }
+
+// Supplier business names (the seeded/mock catalog in data/seed/suppliers.json),
+// transliterated to Bangla so the whole supplier panel reads in Bengali.
+const SUPPLIERS_BN = {
+  "Rangpur Agro Depot": "রংপুর এগ্রো ডিপো",
+  "Krishi Bhandar": "কৃষি ভান্ডার",
+  "GreenField Inputs": "গ্রিনফিল্ড ইনপুটস",
+};
+export function supplierName(name, lang) {
+  if (lang !== "bn" || !name) return name;
+  return SUPPLIERS_BN[String(name).trim()] || name;
+}
+const _sn = (name) => SUPPLIERS_BN[String(name).trim()] || name;
 
 // ---------------------------------------------------------------------------
 // Word/value tokens: enums the backend emits inside sentences and as values.
@@ -115,10 +129,30 @@ const TOKENS = {
   "rising": "বাড়ছে",
   "falling": "কমছে",
   "stable": "স্থির",
+  // disease severity
+  "mild": "মৃদু",
+  "moderate": "মাঝারি",
+  "severe": "তীব্র",
+  // disease condition
+  "healthy": "সুস্থ",
+  "disease": "রোগ",
+  "pest": "পোকা",
+  "deficiency": "পুষ্টির অভাব",
   // misc
   "maund": "মণ",
   "acre": "একর",
 };
+
+// Display units that appear as bare tokens in JSX (prices, weights, distances,
+// fertilizer product codes).
+const UNITS = {
+  BDT: "টাকা", kg: "কেজি", km: "কিমি", "day(s)": "দিন", days: "দিন",
+  UREA: "ইউরিয়া", TSP: "টিএসপি", MOP: "এমওপি", MoP: "এমওপি",
+};
+export function unit(u, lang) {
+  if (lang !== "bn" || u == null) return u;
+  return UNITS[String(u)] ?? u;
+}
 
 export function tk(value, lang) {
   if (lang !== "bn" || value == null) return value;
@@ -223,6 +257,16 @@ const PHRASES = {
   // --- scenario fixed verdicts ---
   "This scenario turns a profit into a LOSS.": "এই পরিস্থিতিতে লাভ লোকসানে পরিণত হয়।",
   "No change to the bottom line.": "শেষ হিসাবে কোনো পরিবর্তন নেই।",
+
+  // --- disease detection: diagnosis fallbacks + fixed messages (disease.py) ---
+  "Unclear": "অস্পষ্ট",
+  "Healthy": "সুস্থ",
+  "AI photo estimate — confirm with a local agriculture extension officer before applying any chemical.":
+    "এআই ছবি-অনুমান — কোনো রাসায়নিক প্রয়োগের আগে স্থানীয় কৃষি সম্প্রসারণ কর্মকর্তার সঙ্গে যাচাই করুন।",
+  "That doesn't look like a crop plant — please upload a close-up photo of the affected leaf or plant.":
+    "এটি ফসলের গাছ বলে মনে হচ্ছে না — আক্রান্ত পাতা বা গাছের কাছ থেকে তোলা স্পষ্ট ছবি দিন।",
+  "could not analyse the image — please try a clearer, well-lit close-up of the affected leaf":
+    "ছবিটি বিশ্লেষণ করা গেল না — আক্রান্ত পাতার আরও স্পষ্ট, ভালো আলোয় তোলা ছবি দিন",
 };
 
 // ---------------------------------------------------------------------------
@@ -682,25 +726,25 @@ const RULES = [
     (m) => `'${cropName(m[2], "bn")}'-এর দামের জন্য '${cropName(m[1], "bn")}' ব্যবহার করা হয়েছে`],
 
   // ===== supplier comparison (suppliers.py) =====
-  [/^Buy from (.+)$/, (m) => `${m[1]} থেকে কিনুন`],
+  [/^Buy from (.+)$/, (m) => `${_sn(m[1])} থেকে কিনুন`],
   [/^(.+) is cheapest for your ([\d,.]+) kg fertilizer basket at ([\d,]+) BDT — saves ([\d,]+) BDT vs (.+)\. It delivers in (\d+) day\(s\), rated ([\d.]+), ([\d.]+) km away\.$/,
-    (m) => `আপনার ${m[2]} কেজি সারের ঝুড়ির জন্য ${m[1]} সবচেয়ে সস্তা — ${m[3]} টাকা (${m[5]}-এর চেয়ে ${m[4]} টাকা সাশ্রয়)। ডেলিভারি ${m[6]} দিনে, রেটিং ${m[7]}, দূরত্ব ${m[8]} কিমি।`],
+    (m) => `আপনার ${m[2]} কেজি সারের ঝুড়ির জন্য ${_sn(m[1])} সবচেয়ে সস্তা — ${m[3]} টাকা (${_sn(m[5])}-এর চেয়ে ${m[4]} টাকা সাশ্রয়)। ডেলিভারি ${m[6]} দিনে, রেটিং ${m[7]}, দূরত্ব ${m[8]} কিমি।`],
   [/^(.+) is cheapest for your ([\d,.]+) kg fertilizer basket at ([\d,]+) BDT\. It delivers in (\d+) day\(s\), rated ([\d.]+), ([\d.]+) km away\.$/,
-    (m) => `আপনার ${m[2]} কেজি সারের ঝুড়ির জন্য ${m[1]} সবচেয়ে সস্তা — ${m[3]} টাকা। ডেলিভারি ${m[4]} দিনে, রেটিং ${m[5]}, দূরত্ব ${m[6]} কিমি।`],
+    (m) => `আপনার ${m[2]} কেজি সারের ঝুড়ির জন্য ${_sn(m[1])} সবচেয়ে সস্তা — ${m[3]} টাকা। ডেলিভারি ${m[4]} দিনে, রেটিং ${m[5]}, দূরত্ব ${m[6]} কিমি।`],
   [/^(.+) delivers fastest \((\d+) day\(s\)\)$/,
-    (m) => `${m[1]} সবচেয়ে দ্রুত ডেলিভারি দেয় (${m[2]} দিন)`],
+    (m) => `${_sn(m[1])} সবচেয়ে দ্রুত ডেলিভারি দেয় (${m[2]} দিন)`],
   [/^(.+) is highest-rated \(([\d.]+)\)$/,
-    (m) => `${m[1]}-এর রেটিং সর্বোচ্চ (${m[2]})`],
+    (m) => `${_sn(m[1])}-এর রেটিং সর্বোচ্চ (${m[2]})`],
   [/^soil type not provided — standard \(non-sandy\) FRG dose assumed; sandy soil would need ~25% more MoP$/,
     () => `মাটির ধরন দেওয়া হয়নি — সাধারণ (অ-বেলে) FRG মাত্রা ধরা হয়েছে; বেলে মাটিতে ~25% বেশি MoP লাগত`],
 
   // ===== disclosure notes =====
   [/^profit estimates use seeded reference prices \(see data\/seed\) — disclosed as mock$/,
-    () => `লাভের হিসাবে নমুনা (মক) রেফারেন্স দাম ব্যবহৃত — data/seed দ্রষ্টব্য`],
+    () => `লাভের হিসাবে নমুনা (মক) রেফারেন্স দাম ব্যবহৃত`],
   [/^seeded\/mock \(data\/seed\/market_prices\.json — not a live feed\)$/,
-    () => `নমুনা/মক দাম (data/seed/market_prices.json — লাইভ ফিড নয়)`],
+    () => `নমুনা/মক দাম — লাইভ ফিড নয়`],
   [/^seeded\/mock \(data\/seed\/suppliers\.json — a seeded catalog is allowed by the brief\)$/,
-    () => `নমুনা/মক ক্যাটালগ (data/seed/suppliers.json — ব্রিফ অনুযায়ী অনুমোদিত)`],
+    () => `নমুনা/মক ক্যাটালগ — ব্রিফ অনুযায়ী অনুমোদিত`],
 ];
 
 // Split on "; " only at parenthesis depth 0 — clause separators inside a KB

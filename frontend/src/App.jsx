@@ -156,7 +156,7 @@ export default function App() {
     setBusy(true);
     try {
       const crop = plan?.crop || financials?.crop || crops?.options?.[0]?.crop;
-      const res = await diagnose(sessionId, dataUrl, crop);
+      const res = await diagnose(sessionId, dataUrl, crop, lang);
       const d = res.diagnosis || {};
       setDisease(d);
       setTab("disease");
