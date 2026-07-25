@@ -3,7 +3,7 @@
 // seeded/mock — disclosed at the bottom. Bangla mode: labels from the static
 // dictionary, the call + reasoning + disclosure via deterministic lib/bn.js.
 import { t } from "../lib/i18n.js";
-import { localize, tk, cropName, d } from "../lib/bn.js";
+import { localize, tk, cropName, d, unit } from "../lib/bn.js";
 
 const money = (v, lang) => (v == null ? "—" : d(Number(v).toLocaleString(), lang));
 
@@ -83,7 +83,7 @@ export default function MarketView({ market, lang = "en" }) {
           </div>
           <div>
             <dt>{t(lang, "market.gross")}</dt>
-            <dd>{money(rev.gross_revenue_bdt, lang)} BDT</dd>
+            <dd>{money(rev.gross_revenue_bdt, lang)} {unit("BDT", lang)}</dd>
           </div>
         </dl>
       )}

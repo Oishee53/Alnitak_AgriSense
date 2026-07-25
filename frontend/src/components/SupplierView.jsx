@@ -4,7 +4,7 @@
 // seeded/mock — disclosed at the bottom. Bangla mode: labels from the static
 // dictionary, recommendation + tradeoffs + disclosure via lib/bn.js.
 import { t } from "../lib/i18n.js";
-import { localize, cropName, d } from "../lib/bn.js";
+import { localize, cropName, d, unit, supplierName } from "../lib/bn.js";
 
 const money = (v, lang) => (v == null ? "—" : d(Number(v).toLocaleString(), lang));
 
@@ -23,7 +23,7 @@ export default function SupplierView({ suppliers, lang = "en" }) {
         {Object.entries(needs).map(([k, v], i) => (
           <span key={k}>
             {i > 0 && " · "}
-            <strong>{money(v, lang)} kg</strong> {k.replace("_kg", "").toUpperCase()}
+            <strong>{money(v, lang)} {unit("kg", lang)}</strong> {unit(k.replace("_kg", "").toUpperCase(), lang)}
           </span>
         ))}
       </p>
@@ -45,14 +45,14 @@ export default function SupplierView({ suppliers, lang = "en" }) {
                 {sup.id === bestId && (
                   <span className="best-badge">{t(lang, "sup.cheapest")}</span>
                 )}
-                {sup.name}
+                {supplierName(sup.name, lang)}
               </td>
               <td>
-                <strong>{money(sup.total_input_cost_bdt, lang)} BDT</strong>
+                <strong>{money(sup.total_input_cost_bdt, lang)} {unit("BDT", lang)}</strong>
               </td>
               <td>{d(sup.delivery_days, lang)} {t(lang, "sup.days")}</td>
               <td>{d(sup.rating, lang)} ★</td>
-              <td>{d(sup.distance_km, lang)} km</td>
+              <td>{d(sup.distance_km, lang)} {unit("km", lang)}</td>
             </tr>
           ))}
         </tbody>

@@ -196,7 +196,7 @@ const STR = {
   "dz.title": ["🔬 Photo diagnosis", "🔬 ছবি থেকে রোগ নির্ণয়"],
   "dz.confidence": ["confidence", "আস্থা"],
   "dz.kb": ["KB-grounded", "জ্ঞানভান্ডার-ভিত্তিক"],
-  "dz.ai": ["AI estimate", "AI অনুমান"],
+  "dz.ai": ["AI estimate", "এআই অনুমান"],
   "dz.symptoms": ["Visible symptoms", "দৃশ্যমান লক্ষণ"],
   "dz.treatment": ["Treatment", "প্রতিকার"],
   "dz.prevention": ["Prevention (IPM-first)", "প্রতিরোধ (আইপিএম-প্রথম)"],

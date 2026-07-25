@@ -3,7 +3,7 @@
 // Labels follow the language toggle; the NUMBERS stay exactly as computed so
 // they match the agent trace digit-for-digit.
 import { t } from "../lib/i18n.js";
-import { localize, cropName, tk, d } from "../lib/bn.js";
+import { localize, cropName, tk, d, unit } from "../lib/bn.js";
 
 export default function FinanceTable({ financials, lang = "en" }) {
   if (!financials) return null;
@@ -32,12 +32,12 @@ export default function FinanceTable({ financials, lang = "en" }) {
         </tbody>
       </table>
       <dl className="metrics">
-        <div><dt>{t(lang, "fin.totalCost")}</dt><dd>{d(f.total_cost_bdt, lang)} BDT</dd></div>
+        <div><dt>{t(lang, "fin.totalCost")}</dt><dd>{d(f.total_cost_bdt, lang)} {unit("BDT", lang)}</dd></div>
         <div><dt>{t(lang, "fin.yield")}</dt><dd>{d(f.expected_yield, lang)} {tk(f.expected_yield_unit, lang)}</dd></div>
-        <div><dt>{t(lang, "fin.revenue")}</dt><dd>{d(f.revenue_bdt, lang)} BDT</dd></div>
-        <div><dt>{t(lang, "fin.net")}</dt><dd>{d(f.net_profit_bdt, lang)} BDT</dd></div>
+        <div><dt>{t(lang, "fin.revenue")}</dt><dd>{d(f.revenue_bdt, lang)} {unit("BDT", lang)}</dd></div>
+        <div><dt>{t(lang, "fin.net")}</dt><dd>{d(f.net_profit_bdt, lang)} {unit("BDT", lang)}</dd></div>
         <div><dt>{t(lang, "fin.roi")}</dt><dd>{f.roi != null ? `${d((f.roi * 100).toFixed(1), lang)}%` : "—"}</dd></div>
-        <div><dt>{t(lang, "fin.breakEven")}</dt><dd>{d(f.break_even_price_bdt_per_unit, lang)} BDT/{tk("unit", lang) === "unit" ? (lang === "bn" ? "একক" : "unit") : "unit"}</dd></div>
+        <div><dt>{t(lang, "fin.breakEven")}</dt><dd>{d(f.break_even_price_bdt_per_unit, lang)} {unit("BDT", lang)}/{lang === "bn" ? "একক" : "unit"}</dd></div>
       </dl>
       {f.assumptions?.length > 0 && (
         <p className="assumptions">

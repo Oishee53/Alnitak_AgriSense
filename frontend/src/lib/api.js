@@ -77,11 +77,11 @@ export async function getPaymentMode() {
   return jsonOrThrow(res); // -> { sandbox: bool, app_id }
 }
 
-export async function diagnose(sessionId, imageDataUrl, crop) {
+export async function diagnose(sessionId, imageDataUrl, crop, lang) {
   const res = await fetch(`${BASE}/api/diagnose`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ session_id: sessionId, image: imageDataUrl, crop }),
+    body: JSON.stringify({ session_id: sessionId, image: imageDataUrl, crop, lang }),
   });
   return jsonOrThrow(res); // -> { diagnosis, trace }
 }
