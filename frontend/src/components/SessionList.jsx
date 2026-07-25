@@ -14,17 +14,19 @@ function fmtWhen(iso) {
   });
 }
 
-export default function SessionList({ sessions, currentId, busy, onSelect, onNew }) {
+import { t } from "../lib/i18n.js";
+
+export default function SessionList({ sessions, currentId, busy, onSelect, onNew, lang = "en" }) {
   return (
     <div className="card sessions">
       <div className="sessions-head">
-        <h2>🗂️ Sessions</h2>
+        <h2>{t(lang, "sess.title")}</h2>
         <button className="sessions-new" disabled={busy} onClick={onNew}>
-          + New
+          {t(lang, "sess.new")}
         </button>
       </div>
       {(!sessions || sessions.length === 0) && (
-        <p className="hint">Past conversations will appear here.</p>
+        <p className="hint">{t(lang, "sess.hint")}</p>
       )}
       <ul className="session-list">
         {sessions?.map((s) => (
@@ -37,7 +39,7 @@ export default function SessionList({ sessions, currentId, busy, onSelect, onNew
             >
               <span className="session-label">{s.label}</span>
               <span className="session-meta">
-                {fmtWhen(s.created_at)} · {s.message_count} msg
+                {fmtWhen(s.created_at)} · {s.message_count} {t(lang, "sess.msg")}
               </span>
             </button>
           </li>

@@ -15,6 +15,7 @@ import DiseaseView from "./components/DiseaseView.jsx";
 import PaymentPanel from "./components/PaymentPanel.jsx";
 import SessionList from "./components/SessionList.jsx";
 import { sendChat, getSession, getTrace, listSessions, diagnose } from "./lib/api.js";
+import { t } from "./lib/i18n.js";
 
 const LS_KEY = "agrisense_session_id";
 
@@ -201,19 +202,19 @@ export default function App() {
   // otherwise the most advanced artifact available. Order here is the
   // fallback priority.
   const TABS = [
-    { key: "crops", label: "🌱 Crop options", data: crops },
-    { key: "calendar", label: "📅 Season calendar", data: plan },
-    { key: "finance", label: "💰 Finance", data: financials },
-    { key: "fertilizer", label: "🧪 Fertilizer", data: fertilizer },
-    { key: "pests", label: "🐛 Pest risk", data: pestRisk },
-    { key: "scenario", label: "🔮 What-if", data: scenario },
-    { key: "weather", label: "🌦️ Weather alerts", data: alerts },
-    { key: "market", label: "💹 Market", data: market },
-    { key: "suppliers", label: "🛒 Suppliers", data: suppliers },
-    { key: "disease", label: "🔬 Diagnosis", data: disease },
+    { key: "crops", label: t(lang, "tab.crops"), data: crops },
+    { key: "calendar", label: t(lang, "tab.calendar"), data: plan },
+    { key: "finance", label: t(lang, "tab.finance"), data: financials },
+    { key: "fertilizer", label: t(lang, "tab.fertilizer"), data: fertilizer },
+    { key: "pests", label: t(lang, "tab.pests"), data: pestRisk },
+    { key: "scenario", label: t(lang, "tab.scenario"), data: scenario },
+    { key: "weather", label: t(lang, "tab.weather"), data: alerts },
+    { key: "market", label: t(lang, "tab.market"), data: market },
+    { key: "suppliers", label: t(lang, "tab.suppliers"), data: suppliers },
+    { key: "disease", label: t(lang, "tab.disease"), data: disease },
     // Payment is always reachable so judges can find the bdapps checkout;
     // the panel itself asks for a first message if there's no session yet.
-    { key: "payment", label: "💳 Premium", data: { always: true } },
+    { key: "payment", label: t(lang, "tab.payment"), data: { always: true } },
   ];
   const available = TABS.filter((t) => !!t.data);
   const fallbackOrder = [
@@ -267,10 +268,10 @@ export default function App() {
           className={`toggle-sessions ${showSessions ? "active" : ""}`}
           onClick={() => setShowSessions((v) => !v)}
         >
-          🗂️ Sessions{sessions.length ? ` (${sessions.length})` : ""}
+          {t(lang, "top.sessions")}{sessions.length ? ` (${sessions.length})` : ""}
         </button>
         <button className="new-session" onClick={newSession}>
-          ↻ New session
+          {t(lang, "top.new")}
         </button>
       </header>
 
@@ -283,6 +284,7 @@ export default function App() {
               busy={busy}
               onSelect={loadSession}
               onNew={newSession}
+              lang={lang}
             />
           </aside>
         )}
@@ -294,7 +296,7 @@ export default function App() {
             onImage={handleImage}
             lang={lang}
           />
-          <ProfileCard farm={farm} />
+          <ProfileCard farm={farm} lang={lang} />
 
           {effectiveTab && (
             <div className="tab-bar">
@@ -316,6 +318,7 @@ export default function App() {
             <CropOptions
               data={crops}
               busy={busy}
+              lang={lang}
               onPick={(crop) => {
                 // Rebuild for the new crop every panel already on screen, so
                 // nothing is left showing the previous crop. Only mention the
@@ -344,15 +347,15 @@ export default function App() {
               }}
             />
           )}
-          {effectiveTab === "calendar" && <PlanView plan={plan} />}
-          {effectiveTab === "finance" && <FinanceTable financials={financials} />}
-          {effectiveTab === "fertilizer" && <FertilizerView schedule={fertilizer} />}
-          {effectiveTab === "pests" && <PestRiskView risk={pestRisk} />}
-          {effectiveTab === "scenario" && <ScenarioView scenario={scenario} />}
-          {effectiveTab === "weather" && <WeatherAlerts data={alerts} />}
-          {effectiveTab === "market" && <MarketView market={market} />}
-          {effectiveTab === "suppliers" && <SupplierView suppliers={suppliers} />}
-          {effectiveTab === "disease" && <DiseaseView disease={disease} image={diseaseImg} />}
+          {effectiveTab === "calendar" && <PlanView plan={plan} lang={lang} />}
+          {effectiveTab === "finance" && <FinanceTable financials={financials} lang={lang} />}
+          {effectiveTab === "fertilizer" && <FertilizerView schedule={fertilizer} lang={lang} />}
+          {effectiveTab === "pests" && <PestRiskView risk={pestRisk} lang={lang} />}
+          {effectiveTab === "scenario" && <ScenarioView scenario={scenario} lang={lang} />}
+          {effectiveTab === "weather" && <WeatherAlerts data={alerts} lang={lang} />}
+          {effectiveTab === "market" && <MarketView market={market} lang={lang} />}
+          {effectiveTab === "suppliers" && <SupplierView suppliers={suppliers} lang={lang} />}
+          {effectiveTab === "disease" && <DiseaseView disease={disease} image={diseaseImg} lang={lang} />}
           {effectiveTab === "payment" && (
             <PaymentPanel
               sessionId={sessionId}

@@ -24,6 +24,21 @@ from app.memory.store import SessionState
 
 MAX_STEPS = 10  # safety bound on LLM iterations per turn
 
+# One numeral system per reply, enforced in code — the model mixes ০-৯ and 0-9
+# when writing Bangla no matter what the prompt says. Every reply is first
+# folded to Western digits (kills any mixing), then, for Bangla-mode replies,
+# mapped wholesale to Bengali numerals. Pure character translation both ways:
+# deterministic, nothing the model can garble.
+_BN_TO_WESTERN = str.maketrans("০১২৩৪৫৬৭৮৯", "0123456789")
+_WESTERN_TO_BN = str.maketrans("0123456789", "০১২৩৪৫৬৭৮৯")
+
+
+def _normalize_digits(text: str, lang: str | None) -> str:
+    western = text.translate(_BN_TO_WESTERN)
+    if (lang or "en").lower() == "bn":
+        return western.translate(_WESTERN_TO_BN)
+    return western
+
 # Which artifact slot each tool's result feeds (returned to the UI + persisted).
 _ARTIFACT_SLOTS = {
     "recommend_crops": "crop_options",
@@ -297,7 +312,7 @@ class Orchestrator:
             tool_calls = resp.get("tool_calls") or []
 
             if resp.get("text") and not tool_calls:
-                reply_text = resp["text"]
+                reply_text = _normalize_digits(resp["text"], lang)
                 trace_mod.record(sid, "message", summary=reply_text[:400])
                 break
 

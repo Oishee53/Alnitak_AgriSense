@@ -1,59 +1,63 @@
 // Scenario simulation (Tier 1). Baseline vs what-if side by side, with every
 // number recomputed by the finance engine — the deltas are the whole point, so
 // changed rows are highlighted and unchanged ones stay quiet.
+// In Bangla mode labels come from the static dictionary and the templated
+// verdict/reasoning strings go through lib/bn.js (translate, not generate).
+import { t } from "../lib/i18n.js";
+import { localize, tk, cropName, d as bd } from "../lib/bn.js";
 
-const fmt = (v, unit) => {
+const fmt = (v, unit, lang) => {
   if (v == null) return "—";
-  if (unit === "ratio") return `${(v * 100).toFixed(1)}%`;
-  if (typeof v !== "number") return String(v);
-  return v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  if (unit === "ratio") return `${bd((v * 100).toFixed(1), lang)}%`;
+  if (typeof v !== "number") return bd(String(v), lang);
+  return bd(v.toLocaleString(undefined, { maximumFractionDigits: 2 }), lang);
 };
 
-function Delta({ d }) {
-  const changed = d.change != null && d.change !== 0;
-  const good = changed && d.change > 0;
-  const isCost = /cost|break-even/i.test(d.metric);
+function Delta({ row, lang }) {
+  const changed = row.change != null && row.change !== 0;
+  const good = changed && row.change > 0;
+  const isCost = /cost|break-even/i.test(row.metric);
   // For costs and break-even, up is bad; for profit/revenue/yield, up is good.
   const positive = isCost ? !good : good;
 
   return (
     <tr className={changed ? "delta-row changed" : "delta-row"}>
-      <td>{d.metric}</td>
-      <td>{fmt(d.before, d.unit)}</td>
+      <td>{localize(row.metric, lang)}</td>
+      <td>{fmt(row.before, row.unit, lang)}</td>
       <td>
-        <strong>{fmt(d.after, d.unit)}</strong>
+        <strong>{fmt(row.after, row.unit, lang)}</strong>
       </td>
       <td className={changed ? (positive ? "delta-up" : "delta-down") : ""}>
         {changed ? (
           <>
-            {d.change > 0 ? "+" : ""}
-            {fmt(d.change, d.unit)}
-            {d.change_pct != null && (
+            {row.change > 0 ? "+" : ""}
+            {fmt(row.change, row.unit, lang)}
+            {row.change_pct != null && (
               <span className="delta-pct">
                 {" "}
-                ({d.change_pct > 0 ? "+" : ""}
-                {d.change_pct}%)
+                ({row.change_pct > 0 ? "+" : ""}
+                {bd(row.change_pct, lang)}%)
               </span>
             )}
           </>
         ) : (
-          <span className="delta-none">no change</span>
+          <span className="delta-none">{t(lang, "scen.noChange")}</span>
         )}
       </td>
     </tr>
   );
 }
 
-const LABELS = {
-  rainfall_pct: "Rainfall",
-  budget_pct: "Budget",
-  new_budget_bdt: "New budget",
-  price_pct: "Price",
-  yield_pct: "Yield",
-  cost_pct: "Input costs",
+const LABEL_KEYS = {
+  rainfall_pct: "scen.rainfall",
+  budget_pct: "scen.budget",
+  new_budget_bdt: "scen.newBudget",
+  price_pct: "scen.price",
+  yield_pct: "scen.yield",
+  cost_pct: "scen.inputCosts",
 };
 
-export default function ScenarioView({ scenario }) {
+export default function ScenarioView({ scenario, lang = "en" }) {
   if (!scenario || scenario.error) return null;
   const s = scenario;
   const applied = s.scenario_applied || {};
@@ -61,55 +65,56 @@ export default function ScenarioView({ scenario }) {
 
   return (
     <div className="card scenario-view">
-      <h2>🔮 What-if · {s.crop}</h2>
+      <h2>{t(lang, "scen.title")} · {cropName(s.crop, lang)}</h2>
 
       <div className="scenario-chips">
         {Object.entries(applied).map(([k, v]) => (
           <span key={k} className="scenario-chip">
-            {LABELS[k] || k}{" "}
+            {LABEL_KEYS[k] ? t(lang, LABEL_KEYS[k]) : k}{" "}
             <strong>
               {k === "new_budget_bdt"
-                ? `${Number(v).toLocaleString()} BDT`
-                : `${v > 0 ? "+" : ""}${v}%`}
+                ? `${bd(Number(v).toLocaleString(), lang)} BDT`
+                : `${v > 0 ? "+" : ""}${bd(v, lang)}%`}
             </strong>
           </span>
         ))}
       </div>
 
       <p className={worse ? "verdict verdict-bad" : "verdict verdict-good"}>
-        {s.verdict}
+        {localize(s.verdict, lang)}
       </p>
 
       {s.acreage_reduced && (
         <p className="warning">
-          ⚠ The budget no longer funds the full area — the plan is resized to{" "}
-          {s.scenario?.farm_size_acres} acre.
+          {t(lang, "scen.resized1")}
+          {bd(s.scenario?.farm_size_acres, lang)}
+          {t(lang, "scen.resized2")}
         </p>
       )}
 
       <table>
         <thead>
           <tr>
-            <th>Metric</th>
-            <th>Baseline</th>
-            <th>Scenario</th>
-            <th>Change</th>
+            <th>{t(lang, "scen.metric")}</th>
+            <th>{t(lang, "scen.baseline")}</th>
+            <th>{t(lang, "scen.scenario")}</th>
+            <th>{t(lang, "scen.change")}</th>
           </tr>
         </thead>
         <tbody>
-          {s.deltas?.map((d, i) => (
-            <Delta key={i} d={d} />
+          {s.deltas?.map((row, i) => (
+            <Delta key={i} row={row} lang={lang} />
           ))}
         </tbody>
       </table>
 
       {s.reasoning?.length > 0 && (
         <div className="pest-block">
-          <strong>How this was calculated</strong>
+          <strong>{t(lang, "scen.how")}</strong>
           <ul>
             {s.reasoning.map((r, i) => (
               <li key={i} className="cal-because">
-                {r}
+                {localize(r, lang)}
               </li>
             ))}
           </ul>
@@ -118,26 +123,28 @@ export default function ScenarioView({ scenario }) {
 
       {s.alternatives_under_new_constraint?.length > 0 && (
         <div className="alt-box">
-          <h3>Better options under this constraint</h3>
+          <h3>{t(lang, "scen.better")}</h3>
           <ul className="alt-list">
             {s.alternatives_under_new_constraint.map((a, i) => (
               <li key={i}>
                 <div className="alt-head">
-                  <strong>{a.crop}</strong>
-                  <span className="pest-type">{a.risk} risk</span>
+                  <strong>{cropName(a.crop, lang)}</strong>
+                  <span className="pest-type">
+                    {tk(a.risk, lang)} {t(lang, "scen.risk")}
+                  </span>
                   <span className="alt-profit">
-                    ≈ {Math.round(a.risk_adjusted_profit_bdt_per_acre).toLocaleString()}{" "}
-                    BDT/acre
+                    ≈ {bd(Math.round(a.risk_adjusted_profit_bdt_per_acre).toLocaleString(), lang)}{" "}
+                    BDT{t(lang, "crops.acreProfit")}
                   </span>
                 </div>
-                <div className="cal-because">{a.because}</div>
+                <div className="cal-because">{localize(a.because, lang)}</div>
               </li>
             ))}
           </ul>
         </div>
       )}
 
-      {s.note && <p className="assumptions">{s.note}</p>}
+      {s.note && <p className="assumptions">{localize(s.note, lang)}</p>}
     </div>
   );
 }

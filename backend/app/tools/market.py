@@ -159,11 +159,17 @@ async def get_market_prices(
     if key != name:
         result["proxy_note"] = f"using '{key}' as a price proxy for '{name}'"
 
-    # Gross revenue at the current price, if we can size it.
-    if farm_size_acres:
+    # Gross revenue at the current price, if we can size it. Guard against
+    # zero/negative sizes so a bad input can't yield a confident negative
+    # revenue figure.
+    if farm_size_acres is not None and float(farm_size_acres) <= 0:
+        result["revenue_estimate_note"] = (
+            "farm size must be a positive number of acres — revenue not estimated"
+        )
+    elif farm_size_acres:
         econ = crop_economics().get(name) or {}
         yld = expected_yield_per_acre or econ.get("yield_per_acre")
-        if yld:
+        if yld and float(yld) > 0:
             total_units = round(float(yld) * float(farm_size_acres), 1)
             result["revenue_estimate"] = {
                 "yield_per_acre": float(yld),

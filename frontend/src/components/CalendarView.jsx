@@ -1,30 +1,31 @@
 // Real month-grid calendar for the season plan. Renders each month that holds a
 // plan stage as a 7-column calendar; stages sit in their actual day boxes. The
 // sowing window is tinted, and clicking a day reveals its full stage detail.
+// Month/weekday names + legend labels follow the language toggle; stage DATA
+// (names, actions, because) stays English — the trace-checkable grounding.
 import { useState } from "react";
+import { t, MONTHS_FULL, WEEKDAYS } from "../lib/i18n.js";
+import { localize, d as bd } from "../lib/bn.js";
 
 const STAGE_TYPES = [
-  { test: /harvest|retting/i, icon: "🌾", cls: "harvest", label: "Harvest" },
-  { test: /pest|disease|checkpoint/i, icon: "🐛", cls: "pest", label: "Pest / disease" },
-  { test: /fertiliz|urea|gypsum|top-dress|basal/i, icon: "🧪", cls: "fert", label: "Fertilizer" },
-  { test: /irrigat|drain|\bwater/i, icon: "💧", cls: "irrig", label: "Irrigation" },
-  { test: /weed|thin|mulch/i, icon: "🌿", cls: "weed", label: "Weeding" },
-  { test: /sow|transplant|planting|\bplant\b|nursery/i, icon: "🌱", cls: "sow", label: "Sowing" },
-  { test: /prep/i, icon: "🚜", cls: "prep", label: "Land prep" },
+  { test: /harvest|retting/i, icon: "🌾", cls: "harvest", label: "Harvest", bn: "ফসল কাটা" },
+  { test: /pest|disease|checkpoint/i, icon: "🐛", cls: "pest", label: "Pest / disease", bn: "পোকা / রোগ" },
+  { test: /fertiliz|urea|gypsum|top-dress|basal/i, icon: "🧪", cls: "fert", label: "Fertilizer", bn: "সার" },
+  { test: /irrigat|drain|\bwater/i, icon: "💧", cls: "irrig", label: "Irrigation", bn: "সেচ" },
+  { test: /weed|thin|mulch/i, icon: "🌿", cls: "weed", label: "Weeding", bn: "নিড়ানি" },
+  { test: /sow|transplant|planting|\bplant\b|nursery/i, icon: "🌱", cls: "sow", label: "Sowing", bn: "বপন" },
+  { test: /prep/i, icon: "🚜", cls: "prep", label: "Land prep", bn: "জমি তৈরি" },
 ];
-const OTHER = { icon: "🛠️", cls: "other", label: "Task" };
+const OTHER = { icon: "🛠️", cls: "other", label: "Task", bn: "কাজ" };
 const classify = (stage) => STAGE_TYPES.find((t) => t.test.test(stage)) || OTHER;
-
-const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+const typeLabel = (ty, lang) => (lang === "bn" ? ty.bn : ty.label);
 
 const iso = (y, m, d) => `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 const parse = (s) => { const [y, m, d] = s.split("-").map(Number); return { y, m, d }; };
 
-function MonthGrid({ y, m, byDay, winStart, winEnd, anchor, onPick, selected }) {
+function MonthGrid({ y, m, byDay, winStart, winEnd, anchor, onPick, selected, lang }) {
+  const months = MONTHS_FULL[lang] || MONTHS_FULL.en;
+  const weekdays = WEEKDAYS[lang] || WEEKDAYS.en;
   const firstWd = new Date(y, m - 1, 1).getDay();
   const days = new Date(y, m, 0).getDate();
   const cells = [];
@@ -36,9 +37,9 @@ function MonthGrid({ y, m, byDay, winStart, winEnd, anchor, onPick, selected }) 
 
   return (
     <div className="cal-grid-card">
-      <div className="cal-grid-title">{MONTHS[m - 1]} {y}</div>
+      <div className="cal-grid-title">{months[m - 1]} {bd(y, lang)}</div>
       <div className="cal-grid">
-        {WD.map((w) => (
+        {weekdays.map((w) => (
           <div key={w} className="cal-wd">{w}</div>
         ))}
         {cells.map((d, i) => {
@@ -58,7 +59,7 @@ function MonthGrid({ y, m, byDay, winStart, winEnd, anchor, onPick, selected }) 
             isSel ? "selected" : "",
           ].join(" ").trim();
           const cell = (
-            <div className="cal-cell-date">{d}</div>
+            <div className="cal-cell-date">{bd(d, lang)}</div>
           );
           if (!events.length) {
             return <div key={i} className={cls}>{cell}</div>;
@@ -68,16 +69,16 @@ function MonthGrid({ y, m, byDay, winStart, winEnd, anchor, onPick, selected }) 
               key={i}
               className={cls}
               onClick={() => onPick(dk, events)}
-              aria-label={`${MONTHS[m - 1]} ${d}: ${events.map((e) => e.stage).join(", ")}`}
+              aria-label={`${months[m - 1]} ${d}: ${events.map((e) => e.stage).join(", ")}`}
             >
               {cell}
               <div className="cal-cell-events">
                 {events.map((e, j) => {
-                  const t = classify(e.stage);
+                  const ty = classify(e.stage);
                   return (
-                    <span key={j} className={`cal-ev ${t.cls}`} title={e.stage}>
-                      <span className="cal-ev-icon">{t.icon}</span>
-                      <span className="cal-ev-name">{e.stage}</span>
+                    <span key={j} className={`cal-ev ${ty.cls}`} title={localize(e.stage, lang)}>
+                      <span className="cal-ev-icon">{ty.icon}</span>
+                      <span className="cal-ev-name">{localize(e.stage, lang)}</span>
                     </span>
                   );
                 })}
@@ -90,9 +91,11 @@ function MonthGrid({ y, m, byDay, winStart, winEnd, anchor, onPick, selected }) 
   );
 }
 
-export default function CalendarView({ plan, large = false }) {
+export default function CalendarView({ plan, large = false, lang = "en" }) {
   const [sel, setSel] = useState(null); // { date, events }
   if (!plan || plan.error) return null;
+
+  const months = MONTHS_FULL[lang] || MONTHS_FULL.en;
 
   const byDay = new Map();
   const monthsMap = new Map();
@@ -102,7 +105,7 @@ export default function CalendarView({ plan, large = false }) {
     if (!byDay.has(st.date)) byDay.set(st.date, []);
     byDay.get(st.date).push(st);
   }
-  const months = [...monthsMap.values()].sort((a, b) => a.y - b.y || a.m - b.m);
+  const monthList = [...monthsMap.values()].sort((a, b) => a.y - b.y || a.m - b.m);
 
   const winStart = plan.sowing_window?.start;
   const winEnd = plan.sowing_window?.end;
@@ -110,8 +113,8 @@ export default function CalendarView({ plan, large = false }) {
   // Legend: only the stage types actually present.
   const present = new Map();
   for (const st of plan.stages || []) {
-    const t = classify(st.stage);
-    present.set(t.cls, t);
+    const ty = classify(st.stage);
+    present.set(ty.cls, ty);
   }
 
   const pick = (date, events) => setSel({ date, events });
@@ -124,7 +127,7 @@ export default function CalendarView({ plan, large = false }) {
   return (
     <div className={`calv ${large ? "calv-large" : ""}`}>
       <div className="calv-grids">
-        {months.map(({ y, m }) => (
+        {monthList.map(({ y, m }) => (
           <MonthGrid
             key={`${y}-${m}`}
             y={y}
@@ -135,36 +138,39 @@ export default function CalendarView({ plan, large = false }) {
             anchor={plan.anchor_date}
             onPick={pick}
             selected={sel?.date}
+            lang={lang}
           />
         ))}
       </div>
 
       <div className="calv-side">
         <div className="calv-legend">
-          {[...present.values()].map((t) => (
-            <span key={t.cls} className={`legend-item ${t.cls}`}>
-              <span className="legend-dot" /> {t.label}
+          {[...present.values()].map((ty) => (
+            <span key={ty.cls} className={`legend-item ${ty.cls}`}>
+              <span className="legend-dot" /> {typeLabel(ty, lang)}
             </span>
           ))}
           <span className="legend-item in-window">
-            <span className="legend-dot" /> Sowing window
+            <span className="legend-dot" /> {t(lang, "plan.legendWindow")}
           </span>
         </div>
 
         {detail.events.length > 0 && detailDate && (
           <div className="day-detail">
             <div className="day-detail-date">
-              {MONTHS[detailDate.m - 1]} {detailDate.d}, {detailDate.y}
+              {months[detailDate.m - 1]} {bd(detailDate.d, lang)}, {bd(detailDate.y, lang)}
             </div>
             {detail.events.map((e, i) => {
-              const t = classify(e.stage);
+              const ty = classify(e.stage);
               return (
-                <div key={i} className={`day-detail-item ${t.cls}`}>
+                <div key={i} className={`day-detail-item ${ty.cls}`}>
                   <div className="day-detail-stage">
-                    <span>{t.icon}</span> {e.stage}
+                    <span>{ty.icon}</span> {localize(e.stage, lang)}
                   </div>
-                  <div className="day-detail-action">{e.action}</div>
-                  {e.because && <div className="cal-because">{e.because}</div>}
+                  <div className="day-detail-action">{localize(e.action, lang)}</div>
+                  {e.because && (
+                    <div className="cal-because">{localize(e.because, lang)}</div>
+                  )}
                 </div>
               );
             })}

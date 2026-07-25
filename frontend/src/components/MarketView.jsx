@@ -1,8 +1,11 @@
 // Market price intelligence (Tier 2). Current price, a small history sparkbar,
 // the trend, and the SELL-NOW / STORE / WAIT call with its reasoning. Prices are
-// seeded/mock — disclosed at the bottom.
+// seeded/mock — disclosed at the bottom. Bangla mode: labels from the static
+// dictionary, the call + reasoning + disclosure via deterministic lib/bn.js.
+import { t } from "../lib/i18n.js";
+import { localize, tk, cropName, d } from "../lib/bn.js";
 
-const money = (v) => (v == null ? "—" : Number(v).toLocaleString());
+const money = (v, lang) => (v == null ? "—" : d(Number(v).toLocaleString(), lang));
 
 // Recommendation → colour class. "SELL" calls are urgent (clay), STORE/WAIT is
 // a hold (green), mixed is neutral (amber).
@@ -38,53 +41,56 @@ function SparkBars({ history, current }) {
   );
 }
 
-export default function MarketView({ market }) {
+export default function MarketView({ market, lang = "en" }) {
   if (!market || market.error) return null;
   const m = market;
-  const t = m.trend || {};
-  const arrow = t.direction === "rising" ? "▲" : t.direction === "falling" ? "▼" : "▬";
+  const tr = m.trend || {};
+  const arrow = tr.direction === "rising" ? "▲" : tr.direction === "falling" ? "▼" : "▬";
   const rev = m.revenue_estimate;
 
   return (
     <div className="card market-view">
-      <h2>💹 Market price · {m.crop}</h2>
+      <h2>{t(lang, "market.title")} · {cropName(m.crop, lang)}</h2>
 
       <div className="market-top">
         <div className="market-price">
           <div className="market-now">
-            {money(m.current_price_bdt)} <span className="market-unit">BDT / {m.unit}</span>
+            {money(m.current_price_bdt, lang)}{" "}
+            <span className="market-unit">
+              {t(lang, "market.bdtPer")}{tk(m.unit, lang)}
+            </span>
           </div>
-          <div className={`market-trend trend-${t.direction}`}>
-            {arrow} {t.direction} {t.change_pct_recent > 0 ? "+" : ""}
-            {t.change_pct_recent}% vs last period
+          <div className={`market-trend trend-${tr.direction}`}>
+            {arrow} {tk(tr.direction, lang)} {tr.change_pct_recent > 0 ? "+" : ""}
+            {d(tr.change_pct_recent, lang)}% {t(lang, "market.vsLast")}
           </div>
         </div>
         <SparkBars history={m.history} current={m.current_price_bdt} />
       </div>
 
       <div className={`market-rec ${callClass(m.recommendation)}`}>
-        <div className="market-rec-call">{m.recommendation}</div>
-        <div className="market-rec-because">{m.because}</div>
+        <div className="market-rec-call">{localize(m.recommendation, lang)}</div>
+        <div className="market-rec-because">{localize(m.because, lang)}</div>
       </div>
 
       {rev && (
         <dl className="metrics market-rev">
           <div>
-            <dt>Est. harvest</dt>
+            <dt>{t(lang, "market.estHarvest")}</dt>
             <dd>
-              {money(rev.total_units)} {rev.unit}
+              {money(rev.total_units, lang)} {tk(rev.unit, lang)}
             </dd>
           </div>
           <div>
-            <dt>Gross at today's price</dt>
-            <dd>{money(rev.gross_revenue_bdt)} BDT</dd>
+            <dt>{t(lang, "market.gross")}</dt>
+            <dd>{money(rev.gross_revenue_bdt, lang)} BDT</dd>
           </div>
         </dl>
       )}
-      {rev && <p className="cal-because">{rev.because}</p>}
+      {rev && <p className="cal-because">{localize(rev.because, lang)}</p>}
 
-      {m.proxy_note && <p className="warning">⚠ {m.proxy_note}</p>}
-      <p className="assumptions">{m.price_source}</p>
+      {m.proxy_note && <p className="warning">⚠ {localize(m.proxy_note, lang)}</p>}
+      <p className="assumptions">{localize(m.price_source, lang)}</p>
     </div>
   );
 }

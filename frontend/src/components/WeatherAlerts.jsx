@@ -3,10 +3,13 @@
 // (delay urea before heavy rain, skip a rain-covered irrigation, …) each with
 // the triggering forecast numbers and the `because` reasoning.
 
+import { t } from "../lib/i18n.js";
+import { localize, cropName, placeName, d } from "../lib/bn.js";
+
 const SEV = {
-  high: { icon: "🔴", cls: "sev-high", label: "act now" },
-  warning: { icon: "🟠", cls: "sev-warn", label: "watch" },
-  advice: { icon: "🟢", cls: "sev-advice", label: "tip" },
+  high: { icon: "🔴", cls: "sev-high", labelKey: "wa.actNow" },
+  warning: { icon: "🟠", cls: "sev-warn", labelKey: "wa.watch" },
+  advice: { icon: "🟢", cls: "sev-advice", labelKey: "wa.tip" },
 };
 
 const KIND_ICON = {
@@ -19,15 +22,15 @@ const KIND_ICON = {
   "dry-spell": "☀️",
 };
 
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+import { MONTHS_SHORT } from "../lib/i18n.js";
 
-function fmtDay(iso) {
+function fmtDay(iso, lang) {
   if (!iso) return "";
-  const [, m, d] = iso.split("-").map(Number);
-  return `${MONTHS[m - 1]} ${d}`;
+  const [, m, day] = iso.split("-").map(Number);
+  return `${(MONTHS_SHORT[lang] || MONTHS_SHORT.en)[m - 1]} ${d(day, lang)}`;
 }
 
-export default function WeatherAlerts({ data }) {
+export default function WeatherAlerts({ data, lang = "en" }) {
   if (!data || data.error) return null;
   const fw = data.forecast_window || {};
   const alerts = data.alerts || [];
@@ -35,19 +38,27 @@ export default function WeatherAlerts({ data }) {
 
   return (
     <div className="card weather-alerts">
-      <h2>🌦️ Weather alerts · {data.crop}</h2>
+      <h2>{t(lang, "wa.title")} · {cropName(data.crop, lang)}</h2>
       <p className="sub">
-        Live {fw.days}-day forecast for {data.location}:{" "}
-        <strong>{fw.total_rain_mm} mm</strong> total rain, max{" "}
-        <strong>{fw.max_daily_rain_mm} mm</strong>/day, avg high{" "}
-        <strong>{fw.avg_t_max}°C</strong> ({fw.source})
+        {lang === "bn" ? (
+          <>
+            {placeName(data.location, lang)}-এর {d(fw.days, lang)} দিনের লাইভ পূর্বাভাস:{" "}
+            <strong>{d(fw.total_rain_mm, lang)} মিমি</strong> মোট বৃষ্টি, সর্বোচ্চ{" "}
+            <strong>{d(fw.max_daily_rain_mm, lang)} মিমি</strong>/দিন, গড় সর্বোচ্চ{" "}
+            <strong>{d(fw.avg_t_max, lang)}°C</strong> ({fw.source})
+          </>
+        ) : (
+          <>
+            Live {fw.days}-day forecast for {data.location}:{" "}
+            <strong>{fw.total_rain_mm} mm</strong> total rain, max{" "}
+            <strong>{fw.max_daily_rain_mm} mm</strong>/day, avg high{" "}
+            <strong>{fw.avg_t_max}°C</strong> ({fw.source})
+          </>
+        )}
       </p>
 
       {alerts.length === 0 ? (
-        <p className="alert-clear">
-          ✅ No weather conflicts — the forecast is clear for the upcoming plan
-          actions.
-        </p>
+        <p className="alert-clear">{t(lang, "wa.clear")}</p>
       ) : (
         <ul className="alert-list">
           {alerts.map((a, i) => {
@@ -58,15 +69,17 @@ export default function WeatherAlerts({ data }) {
                   <span className="alert-icon" title={a.kind}>
                     {KIND_ICON[a.kind] || "⚠️"}
                   </span>
-                  <span className="alert-date">{fmtDay(a.date)}</span>
-                  {a.stage && <span className="alert-stage">{a.stage}</span>}
+                  <span className="alert-date">{fmtDay(a.date, lang)}</span>
+                  {a.stage && <span className="alert-stage">{localize(a.stage, lang)}</span>}
                   <span className={`alert-sev ${sev.cls}`}>
-                    {sev.icon} {sev.label}
+                    {sev.icon} {t(lang, sev.labelKey)}
                   </span>
                 </div>
-                <div className="alert-rec">{a.recommendation}</div>
-                <div className="alert-trigger">Forecast: {a.trigger}</div>
-                {a.because && <div className="alert-because">{a.because}</div>}
+                <div className="alert-rec">{localize(a.recommendation, lang)}</div>
+                <div className="alert-trigger">
+                  {t(lang, "wa.forecast")} {localize(a.trigger, lang)}
+                </div>
+                {a.because && <div className="alert-because">{localize(a.because, lang)}</div>}
               </li>
             );
           })}
@@ -76,12 +89,13 @@ export default function WeatherAlerts({ data }) {
       {actions.length > 0 && (
         <details className="upcoming-actions">
           <summary>
-            Plan actions inside the forecast window ({actions.length})
+            {t(lang, "wa.planActions1")}{actions.length}{t(lang, "wa.planActions2")}
           </summary>
           <ul>
             {actions.map((a, i) => (
               <li key={i}>
-                <strong>{fmtDay(a.date)}</strong> — {a.stage}: {a.action}
+                <strong>{fmtDay(a.date, lang)}</strong> — {localize(a.stage, lang)}:{" "}
+                {localize(a.action, lang)}
               </li>
             ))}
           </ul>
@@ -90,11 +104,15 @@ export default function WeatherAlerts({ data }) {
 
       {data.kb_references?.length > 0 && (
         <p className="kb-refs">
-          KB sources:{" "}
+          {t(lang, "crops.kb")}{" "}
           {[...new Set(data.kb_references.map((r) => r.source))].join(", ")}
         </p>
       )}
-      {data.source && <p className="assumptions">Grounding: {data.source}</p>}
+      {data.source && (
+        <p className="assumptions">
+          {lang === "bn" ? "ভিত্তি: " : "Grounding: "}{data.source}
+        </p>
+      )}
     </div>
   );
 }

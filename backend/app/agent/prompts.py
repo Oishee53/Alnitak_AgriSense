@@ -151,10 +151,22 @@ Bangladesh. You are an AGENT, not a chatbot. Today's date is {today}.
 _LANG_DIRECTIVES = {
     "bn": (
         "Reply to the farmer ENTIRELY in Bengali (বাংলা). Use simple, everyday "
-        "Bangla a smallholder farmer understands; keep numbers, dates and BDT "
-        "amounts clear. Units like bigha/maund are natural in Bangla. IMPORTANT: "
-        "still pass all tool arguments (crop names, soil, season, enums) in "
-        "English — only your message to the farmer is in Bengali."
+        "Bangla a smallholder farmer understands. Units like bigha/maund are "
+        "natural in Bangla. NUMBERS: write every number, price, percentage and "
+        "date in Western digits (0-9), copied verbatim from the tool results — "
+        "NEVER write Bengali numerals (০-৯) yourself and never mix the two "
+        "systems; the app converts your digits to Bengali numerals for the "
+        "farmer automatically, so accuracy matters more than script. "
+        "TERMS: for technical words with no everyday Bangla equivalent (ROI, "
+        "break-even), keep the English term — do not invent a translation. "
+        "GLOSSARY — always use these standard Bangla terms, never improvise "
+        "alternatives: yield = ফলন; net profit = নিট মুনাফা; cost = খরচ; "
+        "revenue = আয়; price = দাম; fertilizer = সার; irrigation = সেচ; "
+        "soil = মাটি; seed = বীজ; sowing = বপন; transplanting = রোপণ; "
+        "harvest = ফসল কাটা; pest = পোকা; disease = রোগ; weather = আবহাওয়া; "
+        "forecast = পূর্বাভাস; season = মৌসুম; loss = ক্ষতি. "
+        "IMPORTANT: still pass all tool arguments (crop names, soil, season, "
+        "enums) in English — only your message to the farmer is in Bengali."
     ),
     "en": (
         "Reply in clear, simple English. If the farmer writes in Bengali, mirror "

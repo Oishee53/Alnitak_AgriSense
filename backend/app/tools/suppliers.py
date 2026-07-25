@@ -64,8 +64,21 @@ async def compare_suppliers(
     soil_type: str | None = None,
 ) -> dict[str, Any]:
     """Rank input suppliers by the total cost of this farm's fertilizer basket."""
+    # A basket can only be sized for a real, positive farm area — otherwise we'd
+    # happily "recommend" a supplier for a 0 kg / 0 BDT (or negative) order.
+    try:
+        acres = float(farm_size_acres)
+    except (TypeError, ValueError):
+        acres = 0.0
+    if acres <= 0:
+        return {
+            "error": "farm size must be a positive number of acres to size the "
+            "fertilizer basket",
+            "farm_size_acres": farm_size_acres,
+        }
+
     name = match_crop_name(crop) or crop
-    needs = _needs(name, farm_size_acres, soil_type)
+    needs = _needs(name, acres, soil_type)
     if not needs:
         return {
             "error": f"no kg/acre dose table for '{crop}', so input quantities "
@@ -130,9 +143,9 @@ async def compare_suppliers(
     if top_rated["id"] != best["id"]:
         tradeoffs.append(f"{top_rated['name']} is highest-rated ({top_rated['rating']})")
 
-    return {
+    result: dict[str, Any] = {
         "crop": name,
-        "farm_size_acres": float(farm_size_acres),
+        "farm_size_acres": acres,
         "needs_kg": needs,
         "suppliers": ranked,
         "best_supplier_id": best["id"],
@@ -143,3 +156,11 @@ async def compare_suppliers(
         "catalog_source": "seeded/mock (data/seed/suppliers.json — a seeded "
         "catalog is allowed by the brief)",
     }
+    # Surface the default instead of silently assuming it: sandy soils would
+    # get ~25% more MoP, so the farmer should know which dose was used.
+    if not soil_type:
+        result["assumption_note"] = (
+            "soil type not provided — standard (non-sandy) FRG dose assumed; "
+            "sandy soil would need ~25% more MoP"
+        )
+    return result

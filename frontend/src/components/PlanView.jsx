@@ -2,9 +2,13 @@
 //   • Timeline — stages grouped by month as a vertical list (default).
 //   • Calendar — a real month grid with each stage in its day box.
 // Either can be popped into a full-screen modal for a focused view.
+// UI labels + month names are translated in Bangla mode; stage DATA stays
+// English (it is the trace-checkable grounding).
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import CalendarView from "./CalendarView.jsx";
+import { t, MONTHS_FULL, MONTHS_SHORT } from "../lib/i18n.js";
+import { localize, cropName, d as bd } from "../lib/bn.js";
 
 const STAGE_TYPES = [
   { test: /harvest|retting/i, icon: "🌾", cls: "harvest", label: "Harvest" },
@@ -26,25 +30,23 @@ function classify(stage) {
   );
 }
 
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
-
-function fmtDay(iso) {
-  const [, m, d] = iso.split("-").map(Number);
-  return `${MONTHS[m - 1].slice(0, 3)} ${d}`;
+function fmtDay(iso, lang) {
+  const [, m, day] = iso.split("-").map(Number);
+  return `${(MONTHS_SHORT[lang] || MONTHS_SHORT.en)[m - 1]} ${bd(day, lang)}`;
 }
 
-function monthKey(iso) {
+function monthKey(iso, lang) {
   const [y, m] = iso.split("-").map(Number);
-  return { key: `${y}-${m}`, label: `${MONTHS[m - 1]} ${y}` };
+  return {
+    key: `${y}-${m}`,
+    label: `${(MONTHS_FULL[lang] || MONTHS_FULL.en)[m - 1]} ${bd(y, lang)}`,
+  };
 }
 
-function Timeline({ plan }) {
+function Timeline({ plan, lang }) {
   const groups = [];
   for (const st of plan.stages || []) {
-    const { key, label } = monthKey(st.date);
+    const { key, label } = monthKey(st.date, lang);
     let g = groups.find((x) => x.key === key);
     if (!g) {
       g = { key, label, stages: [] };
@@ -59,15 +61,17 @@ function Timeline({ plan }) {
           <div className="cal-month-label">{g.label}</div>
           <ul className="cal-stages">
             {g.stages.map((st, i) => {
-              const t = classify(st.stage);
+              const ty = classify(st.stage);
               return (
-                <li key={i} className={`cal-stage ${t.cls}`}>
-                  <span className="cal-icon" title={t.label}>{t.icon}</span>
-                  <span className="cal-date">{fmtDay(st.date)}</span>
+                <li key={i} className={`cal-stage ${ty.cls}`}>
+                  <span className="cal-icon" title={ty.label}>{ty.icon}</span>
+                  <span className="cal-date">{fmtDay(st.date, lang)}</span>
                   <div className="cal-body">
-                    <div className="cal-stage-name">{st.stage}</div>
-                    <div className="cal-action">{st.action}</div>
-                    {st.because && <div className="cal-because">{st.because}</div>}
+                    <div className="cal-stage-name">{localize(st.stage, lang)}</div>
+                    <div className="cal-action">{localize(st.action, lang)}</div>
+                    {st.because && (
+                      <div className="cal-because">{localize(st.because, lang)}</div>
+                    )}
                   </div>
                 </li>
               );
@@ -117,15 +121,25 @@ function Modal({ title, onClose, children }) {
   );
 }
 
-export default function PlanView({ plan }) {
+export default function PlanView({ plan, lang = "en" }) {
   const [view, setView] = useState("timeline"); // 'timeline' | 'calendar'
   const [expanded, setExpanded] = useState(false);
   if (!plan || plan.error) return null;
 
+  const subLine = (
+    <p className="sub">
+      {t(lang, "plan.window")} {localize(plan.sowing_window?.label, lang)} ·{" "}
+      {t(lang, "plan.sow")}{" "}
+      <strong>{fmtDay(plan.anchor_date, lang)}</strong> → {t(lang, "plan.harvest")}{" "}
+      <strong>{fmtDay(plan.expected_harvest, lang)}</strong> · {bd(plan.duration_days, lang)}{" "}
+      {t(lang, "plan.days")}
+    </p>
+  );
+
   return (
     <div className="card plan">
       <div className="plan-head">
-        <h2>Season calendar · {plan.crop}</h2>
+        <h2>{t(lang, "plan.title")} · {cropName(plan.crop, lang)}</h2>
         <div className="plan-tools">
           <div className="view-toggle" role="tablist" aria-label="Plan view">
             <button
@@ -134,7 +148,7 @@ export default function PlanView({ plan }) {
               className={view === "timeline" ? "active" : ""}
               onClick={() => setView("timeline")}
             >
-              📋 Timeline
+              {t(lang, "plan.timeline")}
             </button>
             <button
               role="tab"
@@ -142,37 +156,44 @@ export default function PlanView({ plan }) {
               className={view === "calendar" ? "active" : ""}
               onClick={() => setView("calendar")}
             >
-              🗓️ Calendar
+              {t(lang, "plan.calendar")}
             </button>
           </div>
-          <button className="expand-btn" onClick={() => setExpanded(true)} title="Open full calendar">
-            ⤢ Expand
+          <button
+            className="expand-btn"
+            onClick={() => setExpanded(true)}
+            title={t(lang, "plan.expand")}
+          >
+            {t(lang, "plan.expand")}
           </button>
         </div>
       </div>
 
-      <p className="sub">
-        Sowing window {plan.sowing_window?.label} · sow{" "}
-        <strong>{fmtDay(plan.anchor_date)}</strong> → harvest{" "}
-        <strong>{fmtDay(plan.expected_harvest)}</strong> · {plan.duration_days} days
-      </p>
+      {subLine}
 
       {plan.warnings?.map((w, i) => (
-        <p key={i} className="warning">⚠ {w}</p>
+        <p key={i} className="warning">⚠ {localize(w, lang)}</p>
       ))}
 
-      {view === "timeline" ? <Timeline plan={plan} /> : <CalendarView plan={plan} />}
+      {view === "timeline" ? (
+        <Timeline plan={plan} lang={lang} />
+      ) : (
+        <CalendarView plan={plan} lang={lang} />
+      )}
 
-      {plan.source && <p className="assumptions">Calendar source: {plan.source}</p>}
+      {plan.source && (
+        <p className="assumptions">
+          {t(lang, "plan.source")} {plan.source}
+        </p>
+      )}
 
       {expanded && (
-        <Modal title={`Season calendar · ${plan.crop}`} onClose={() => setExpanded(false)}>
-          <p className="sub">
-            Sowing window {plan.sowing_window?.label} · sow{" "}
-            <strong>{fmtDay(plan.anchor_date)}</strong> → harvest{" "}
-            <strong>{fmtDay(plan.expected_harvest)}</strong> · {plan.duration_days} days
-          </p>
-          <CalendarView plan={plan} large />
+        <Modal
+          title={`${t(lang, "plan.title")} · ${cropName(plan.crop, lang)}`}
+          onClose={() => setExpanded(false)}
+        >
+          {subLine}
+          <CalendarView plan={plan} large lang={lang} />
         </Modal>
       )}
     </div>

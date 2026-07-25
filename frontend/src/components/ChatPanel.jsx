@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { t } from "../lib/i18n.js";
 
 // The conversation with the farmer. Intake follow-ups appear here as assistant
 // messages; the agent asks only for the fields it is missing. Two accessibility
@@ -66,20 +67,19 @@ export default function ChatPanel({ messages, busy, onSend, onImage, lang = "en"
 
   return (
     <div className="card chat">
-      <h2>Conversation</h2>
+      <h2>{t(lang, "chat.title")}</h2>
       <div className="messages">
         {messages.length === 0 && (
-          <p className="hint">
-            Try: “I have some land near Rangpur and want to plant something this
-            season.” — or tap 🎤 to speak, or 📷 to diagnose a sick plant.
-          </p>
+          <p className="hint">{t(lang, "chat.hint")}</p>
         )}
         {messages.map((m, i) => (
           <div key={i} className={`msg ${m.role}`}>
             {m.content}
           </div>
         ))}
-        {busy && <div className="msg assistant thinking">thinking…</div>}
+        {busy && (
+          <div className="msg assistant thinking">{t(lang, "chat.thinking")}</div>
+        )}
       </div>
       <form className="composer" onSubmit={submit}>
         <input
@@ -93,7 +93,7 @@ export default function ChatPanel({ messages, busy, onSend, onImage, lang = "en"
           type="button"
           className="icon-btn"
           disabled={busy}
-          title="Upload a crop photo for disease diagnosis"
+          title={t(lang, "chat.photoTitle")}
           onClick={() => fileRef.current?.click()}
         >
           📷
@@ -103,7 +103,7 @@ export default function ChatPanel({ messages, busy, onSend, onImage, lang = "en"
             type="button"
             className={`icon-btn mic ${listening ? "listening" : ""}`}
             disabled={busy}
-            title={listening ? "Listening… tap to stop" : "Speak your message"}
+            title={listening ? t(lang, "chat.micStop") : t(lang, "chat.micTitle")}
             onClick={toggleMic}
           >
             🎤
@@ -112,9 +112,11 @@ export default function ChatPanel({ messages, busy, onSend, onImage, lang = "en"
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={listening ? "Listening…" : "Message AgriSense…"}
+          placeholder={
+            listening ? t(lang, "chat.listening") : t(lang, "chat.placeholder")
+          }
         />
-        <button disabled={busy}>Send</button>
+        <button disabled={busy}>{t(lang, "chat.send")}</button>
       </form>
     </div>
   );

@@ -4,29 +4,32 @@
 // reference, model-suggested otherwise. Always carries the "confirm with an
 // extension officer" disclaimer.
 
+import { t } from "../lib/i18n.js";
+import { localize, cropName } from "../lib/bn.js";
+
 const money = (v) => (v == null ? "—" : Number(v).toLocaleString());
 
 function confClass(c) {
   return `conf-${(c || "low").toLowerCase()}`;
 }
 
-export default function DiseaseView({ disease, image }) {
+export default function DiseaseView({ disease, image, lang = "en" }) {
   if (!disease) return null;
   const d = disease;
 
   if (d.is_plant === false) {
     return (
       <div className="card disease-view">
-        <h2>🔬 Photo diagnosis</h2>
-        <p className="warning">⚠ {d.message}</p>
+        <h2>{t(lang, "dz.title")}</h2>
+        <p className="warning">⚠ {localize(d.message, lang)}</p>
       </div>
     );
   }
   if (d.error) {
     return (
       <div className="card disease-view">
-        <h2>🔬 Photo diagnosis</h2>
-        <p className="pay-error">⚠️ {d.error}</p>
+        <h2>{t(lang, "dz.title")}</h2>
+        <p className="pay-error">⚠️ {localize(d.error, lang)}</p>
       </div>
     );
   }
@@ -35,7 +38,7 @@ export default function DiseaseView({ disease, image }) {
 
   return (
     <div className="card disease-view">
-      <h2>🔬 Photo diagnosis{d.crop ? ` · ${d.crop}` : ""}</h2>
+      <h2>{t(lang, "dz.title")}{d.crop ? ` · ${cropName(d.crop, lang)}` : ""}</h2>
 
       <div className="disease-top">
         {image && <img className="disease-img" src={image} alt="uploaded crop" />}
@@ -45,23 +48,23 @@ export default function DiseaseView({ disease, image }) {
           </div>
           <div className="disease-badges">
             <span className={`badge ${confClass(d.confidence)}`}>
-              {d.confidence} confidence
+              {d.confidence} {t(lang, "dz.confidence")}
             </span>
             {d.severity && <span className="badge sev">{d.severity}</span>}
             <span className={`badge ${d.kb_grounded ? "kb-yes" : "kb-no"}`}>
-              {d.kb_grounded ? "KB-grounded" : "AI estimate"}
+              {d.kb_grounded ? t(lang, "dz.kb") : t(lang, "dz.ai")}
             </span>
           </div>
-          {d.because && <p className="cal-because">{d.because}</p>}
+          {d.because && <p className="cal-because">{localize(d.because, lang)}</p>}
         </div>
       </div>
 
       {d.visible_symptoms?.length > 0 && (
         <div className="pest-block">
-          <strong>Visible symptoms</strong>
+          <strong>{t(lang, "dz.symptoms")}</strong>
           <ul>
             {d.visible_symptoms.map((s, i) => (
-              <li key={i}>{s}</li>
+              <li key={i}>{localize(s, lang)}</li>
             ))}
           </ul>
         </div>
@@ -69,17 +72,17 @@ export default function DiseaseView({ disease, image }) {
 
       {!healthy && d.treatment && (
         <div className={`market-rec ${d.kb_grounded ? "rec-store" : "rec-mixed"}`}>
-          <div className="market-rec-call">Treatment</div>
-          <div className="market-rec-because">{d.treatment}</div>
+          <div className="market-rec-call">{t(lang, "dz.treatment")}</div>
+          <div className="market-rec-because">{localize(d.treatment, lang)}</div>
         </div>
       )}
 
       {d.prevention?.length > 0 && (
         <div className="pest-block">
-          <strong>Prevention (IPM-first)</strong>
+          <strong>{t(lang, "dz.prevention")}</strong>
           <ul>
             {d.prevention.map((p, i) => (
-              <li key={i}>{p}</li>
+              <li key={i}>{localize(p, lang)}</li>
             ))}
           </ul>
         </div>
@@ -88,24 +91,28 @@ export default function DiseaseView({ disease, image }) {
       <dl className="metrics">
         {d.threshold && (
           <div>
-            <dt>Action threshold</dt>
-            <dd>{d.threshold}</dd>
+            <dt>{t(lang, "dz.threshold")}</dt>
+            <dd>{localize(d.threshold, lang)}</dd>
           </div>
         )}
         {Array.isArray(d.cost_bdt_per_acre) && (
           <div>
-            <dt>Est. cost/acre</dt>
+            <dt>{t(lang, "dz.costAcre")}</dt>
             <dd>
               {d.cost_bdt_per_acre[0] === 0 && d.cost_bdt_per_acre[1] === 0
-                ? "management only"
+                ? lang === "bn"
+                  ? "শুধু ব্যবস্থাপনা"
+                  : "management only"
                 : `${money(d.cost_bdt_per_acre[0])}–${money(d.cost_bdt_per_acre[1])} BDT`}
             </dd>
           </div>
         )}
       </dl>
 
-      {d.kb_source && <p className="assumptions">KB source: {d.kb_source}</p>}
-      <p className="assumptions">{d.disclaimer}</p>
+      {d.kb_source && (
+        <p className="assumptions">{t(lang, "dz.kbSource")} {d.kb_source}</p>
+      )}
+      <p className="assumptions">{localize(d.disclaimer, lang)}</p>
     </div>
   );
 }
