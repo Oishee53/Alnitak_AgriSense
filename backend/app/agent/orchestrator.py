@@ -13,6 +13,7 @@ value returned — the judge-verifiable grounding required by Tier-0 #8.
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from app.agent import trace as trace_mod
@@ -153,6 +154,21 @@ Fields:
 - budget_bdt (number): in BDT. "15k"=15000, "1 lakh"=100000; for a range use the LOWER bound
 - target_season (string): e.g. Aman, Boro, Rabi, Aus, Kharif-2, Kharif-1
 
+NEVER INVENT A NUMBER. farm_size_acres and budget_bdt exist ONLY when the
+farmer gave an actual figure (a digit, "1 lakh", "15k", a spelled-out number,
+or a clear unit conversion like "2 bigha"). A vague/qualitative description —
+"small budget", "not much land", "enough money", "a decent amount" — has NO
+number in it. Omit the field entirely in that case; do NOT estimate, round, or
+pick a "reasonable" figure to fill it. Example: "I have a small budget" ->
+budget_bdt is NOT included (there is nothing to convert). "My budget is 15k"
+-> budget_bdt: 15000.
+
+NEVER GUESS A SOIL TYPE. Only set soil_type when the farmer's own words
+clearly name a texture (sandy/বেলে, loam/দোআঁশ, clay/এঁটেল, silt/পলি) or an
+unambiguous synonym. A vague answer — "normal soil", "good soil", "not sure",
+"black soil" — does not clearly mean one of the four; omit soil_type rather
+than picking the closest-sounding one.
+
 Return a JSON object with only the stated fields.
 """
 
@@ -179,69 +195,210 @@ def _to_number(value: Any) -> float | None:
         return None
 
 
+# Deterministic backstop against a well-documented failure mode: asked for a
+# number, a model will sometimes invent a plausible one rather than admit the
+# farmer never gave one — e.g. "small budget" silently becoming budget_bdt=15000.
+# _to_number() alone can't catch this: once the model has already turned "small"
+# into "15000", the string parses fine. So this checks the ORIGINAL farmer
+# message instead: if it contains no digit, no Bengali numeral, no scale word
+# (lakh/k/thousand/হাজার), and no spelled-out number, there is no number in it
+# for the model to have found — any numeric value attributed to it must have
+# been fabricated and is dropped, regardless of what the model returned.
+# Known limitation: this is a message-level gate, not per-field — a message
+# with a number for ONE field ("5 acres, small budget") won't stop a model
+# from also inventing a figure for the OTHER field it correctly left vague.
+_NUMBER_WORD_RE = re.compile(
+    r"\b("
+    r"lakh|lac|crore|hazar|thousand|"
+    r"one|two|three|four|five|six|seven|eight|nine|ten|"
+    r"eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|"
+    r"twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|"
+    r"এক|দুই|তিন|চার|পাঁচ|ছয়|সাত|আট|নয়|দশ|বিশ|ত্রিশ|চল্লিশ|পঞ্চাশ|লাখ|হাজার|কোটি"
+    r")\b",
+    re.IGNORECASE,
+)
+
+
+def _message_has_number(message: str) -> bool:
+    """True if the farmer's message contains an actual number signal: a
+    Western or Bengali digit, a scale word (lakh/k/thousand/হাজার/লাখ), or a
+    spelled-out number. False means nothing in the message could honestly
+    become a figure — see the module note above."""
+    translated = (message or "").translate(_BN_TO_WESTERN)
+    if any(ch.isdigit() for ch in translated):
+        return True
+    return bool(_NUMBER_WORD_RE.search(message or ""))
+
+
+# Soil-type intake validation is intentionally STRICTER than
+# app.tools.seed_data.normalize_soil(), which defaults anything unrecognized to
+# "loam" — a reasonable computational fallback deep in the crop/fertilizer math,
+# but wrong for INTAKE: silently guessing a texture the farmer never confirmed
+# is exactly the hallucination this fix targets. Order mirrors normalize_soil's
+# precedence (sand > clay > silt > loam) so a phrase like "sandy loam" resolves
+# to the same texture in both places.
+_SOIL_SYNONYMS: dict[str, tuple[str, ...]] = {
+    "sandy": ("sand", "বেলে"),
+    "clay": ("clay", "এঁটেল", "কাদা"),
+    "silt": ("silt", "পলি"),
+    "loam": ("loam", "দোআঁশ"),
+}
+
+
+def _canonical_soil_type(raw: str) -> str | None:
+    """Map free text to sandy/loam/clay/silt ONLY if it clearly says so.
+    Anything else (vague, unrecognized, or empty) returns None so the field
+    stays 'missing' and the agent asks the farmer to pick one of the four
+    types — instead of the profile silently recording garbage."""
+    s = (raw or "").strip().lower()
+    if not s:
+        return None
+    for canon, keywords in _SOIL_SYNONYMS.items():
+        if any(kw in s for kw in keywords):
+            return canon
+    return None
+
+
+def _validate_field(field: str, value: Any, message: str) -> tuple[Any, str | None]:
+    """Validate a candidate profile-field value before trusting it.
+
+    Returns (clean_value, None) if it's acceptable, or (None, reason) if it
+    must be rejected — the caller then leaves the field out of the profile, so
+    it stays in missing_fields() and the agent asks again, instead of a
+    hallucinated number or a made-up soil texture entering memory.
+    """
+    if field in _NUMERIC_FIELDS:
+        if not _message_has_number(message):
+            return None, (
+                "the farmer's message has no digit or number word — a figure "
+                "here would have to be invented, so it was dropped"
+            )
+        num = _to_number(value)
+        if num is None:
+            return None, f"'{value}' could not be parsed as a number"
+        return num, None
+    if field == "soil_type":
+        # Derived from the ORIGINAL MESSAGE, not the model's returned `value`.
+        # A model can echo back a plausible-looking canonical string (e.g. map
+        # "good soil" -> "loam") that would pass a check on `value` alone —
+        # that IS the hallucination this guards against. Re-deriving from the
+        # farmer's own words means the model's classification can't quietly
+        # substitute a texture nothing in the message actually supports.
+        canon = _canonical_soil_type(message)
+        if canon is None:
+            return None, (
+                f"the farmer's message doesn't clearly name sandy, loam, clay, "
+                f"or silt — '{value}' was not trusted"
+            )
+        return canon, None
+    return value, None
+
+
 class Orchestrator:
     def __init__(self) -> None:
         self.llm = LLMClient()
 
-    def _apply_profile_update(self, state: SessionState, fields: dict[str, Any]) -> dict[str, Any]:
+    def _apply_profile_update(
+        self, state: SessionState, fields: dict[str, Any], message: str
+    ) -> dict[str, Any]:
         """Handle the intercepted update_farm_profile tool: merge known fields
-        into persistent state and report what is still missing."""
-        accepted = {}
+        into persistent state and report what is still missing.
+
+        Runs budget/farm-size/soil-type through _validate_field first: a
+        number the farmer's message can't support, or a soil description that
+        doesn't clearly name one of the four textures, is REJECTED rather than
+        recorded — the field stays missing and the model is told to ask again
+        for a specific value instead of quietly trusting its own guess.
+        """
+        accepted: dict[str, Any] = {}
+        rejected: dict[str, str] = {}
         for key, value in fields.items():
-            if key in _REQUIRED_FIELDS and value not in (None, ""):
-                state.profile[key] = value
-                accepted[key] = value
+            if key not in _REQUIRED_FIELDS or value in (None, ""):
+                continue
+            clean, reason = _validate_field(key, value, message)
+            if reason is not None:
+                rejected[key] = reason
+                continue
+            state.profile[key] = clean
+            accepted[key] = clean
+
         missing = state.missing_fields()
-        return {
+        instruction = (
+            "Ask targeted follow-ups for ONLY the still_missing fields."
+            if missing
+            else "Profile complete — proceed with get_weather → recommend_crops now."
+        )
+        if rejected:
+            instruction = (
+                "Some values were REJECTED — see 'rejected' below, do NOT treat "
+                "them as known. For a rejected budget_bdt or farm_size_acres, ask "
+                "the farmer for a SPECIFIC NUMBER (e.g. 'Could you give me a "
+                "number, like 20000 BDT or 1 lakh?' / 'How many acres or bigha "
+                "exactly?'). For a rejected soil_type, ask them to pick sandy, "
+                "loam, clay, or silt (briefly describe each if unsure) instead "
+                "of guessing. " + instruction
+            )
+        result: dict[str, Any] = {
             "ok": True,
             "accepted": accepted,
             "profile": state.profile,
             "still_missing": missing,
-            "instruction": (
-                "Ask targeted follow-ups for ONLY the still_missing fields."
-                if missing
-                else "Profile complete — proceed with get_weather → recommend_crops now."
-            ),
+            "instruction": instruction,
         }
+        if rejected:
+            result["rejected"] = rejected
+        return result
 
     async def _capture_intake(self, state: SessionState, message: str) -> None:
         """Deterministically extract farm facts from the message into the
         profile and record an inspectable intake step in the trace. Runs only
         while the profile is incomplete, so intake turns always produce a proper
-        trace and facts are captured regardless of the model's tool choices."""
+        trace and facts are captured regardless of the model's tool choices.
+
+        Same validation as _apply_profile_update: a number the message can't
+        support, or a soil description that isn't clearly one of the four
+        textures, is rejected rather than recorded (see _validate_field)."""
         if not state.missing_fields():
             return  # profile already complete — nothing to gather
 
         raw = await self.llm.extract_json(INTAKE_EXTRACT_PROMPT, message)
         captured: dict[str, Any] = {}
+        rejected: dict[str, str] = {}
         for field in _REQUIRED_FIELDS:
             value = raw.get(field)
             if value in (None, ""):
                 continue
-            if field in _NUMERIC_FIELDS:
-                num = _to_number(value)
-                if num is None:
-                    continue
-                value = num
-            state.profile[field] = value
-            captured[field] = value
+            clean, reason = _validate_field(field, value, message)
+            if reason is not None:
+                rejected[field] = reason
+                continue
+            state.profile[field] = clean
+            captured[field] = clean
 
         missing = state.missing_fields()
         sid = state.id
         trace_mod.record(sid, "tool_call", tool="detect_farm_info", params={"message": message})
+
+        summary_parts = []
+        if captured:
+            summary_parts.append(f"captured {', '.join(captured)}")
+        if rejected:
+            summary_parts.append(f"rejected {', '.join(rejected)} (needs a real value from the farmer)")
+        if not captured and not rejected:
+            summary_parts.append("no new fields")
+        summary_parts.append("still missing: " + ", ".join(missing) if missing else "profile complete")
+
         trace_mod.record(
             sid,
             "tool_result",
             tool="detect_farm_info",
             result={
                 "captured": captured,
+                "rejected": rejected,
                 "profile": dict(state.profile),
                 "still_missing": missing,
             },
-            summary=(
-                (f"captured {', '.join(captured)}; " if captured else "no new fields; ")
-                + ("still missing: " + ", ".join(missing) if missing else "profile complete")
-            ),
+            summary="; ".join(summary_parts),
         )
 
     @staticmethod
@@ -272,17 +429,24 @@ class Orchestrator:
                 injected.append(key)
         return injected
 
-    def _backfill_profile(self, state: SessionState, tool: str, params: dict[str, Any]) -> None:
+    def _backfill_profile(
+        self, state: SessionState, tool: str, params: dict[str, Any], message: str
+    ) -> None:
         """If the LLM passed farm facts directly into a tool (skipping
         update_farm_profile), capture them into the persistent profile so the
-        profile card stays in sync no matter how the model routes the info."""
+        profile card stays in sync no matter how the model routes the info.
+        Same validation as _apply_profile_update — a fabricated number or an
+        unrecognized soil description is silently dropped, not backfilled."""
         mapping = _PROFILE_BACKFILL.get(tool)
         if not mapping:
             return
         for param, field in mapping.items():
             value = params.get(param)
-            if field in _REQUIRED_FIELDS and value not in (None, "") and not state.profile.get(field):
-                state.profile[field] = value
+            if field not in _REQUIRED_FIELDS or value in (None, "") or state.profile.get(field):
+                continue
+            clean, reason = _validate_field(field, value, message)
+            if reason is None:
+                state.profile[field] = clean
 
     async def run(
         self, state: SessionState, message: str, lang: str | None = None
@@ -334,7 +498,7 @@ class Orchestrator:
                             f"{', '.join(injected)} from this session's get_weather result"
                         ),
                     )
-                self._backfill_profile(state, call["name"], call["input"])
+                self._backfill_profile(state, call["name"], call["input"], message)
                 cache_key = call["name"] + "::" + _dump(
                     dict(sorted(call["input"].items()))
                 )
@@ -347,7 +511,7 @@ class Orchestrator:
                             summary=f"duplicate {call['name']} call — reused earlier result",
                         )
                     elif call["name"] == "update_farm_profile":
-                        result = self._apply_profile_update(state, call["input"])
+                        result = self._apply_profile_update(state, call["input"], message)
                         called_cache[cache_key] = result
                     else:
                         result = await dispatch(call["name"], call["input"])

@@ -58,16 +58,45 @@ TOOLS: dict[str, Tool] = {
             "size, soil type, water availability, budget, target season). Call "
             "this FIRST whenever the farmer reveals any of these. The result "
             "tells you which required fields are still missing so you can ask "
-            "targeted follow-ups for ONLY those."
+            "targeted follow-ups for ONLY those. "
+            "NEVER INVENT farm_size_acres or budget_bdt: pass them ONLY when the "
+            "farmer gave an actual figure. A vague description ('small budget', "
+            "'not much land', 'enough money') has no number in it — OMIT the "
+            "field and ask them for a specific number instead of estimating one. "
+            "The server rejects any value it can't trace to a real number or "
+            "figure in their message, so guessing wastes a turn. Likewise, only "
+            "pass soil_type when their words clearly name sandy, loam, clay, or "
+            "silt — a vague answer ('normal soil', 'not sure') should be omitted "
+            "so you ask them to pick one of the four, not guessed."
         ),
         input_schema={
             "type": "object",
             "properties": {
                 "location": {"type": "string", "description": "village/upazila/district"},
-                "farm_size_acres": {"type": "number", "description": "farm size in acres (convert bigha: 1 bigha ≈ 0.33 acre)"},
-                "soil_type": {"type": "string", "description": "sandy | loam | clay | silt (or farmer's words)"},
+                "farm_size_acres": {
+                    "type": "number",
+                    "description": (
+                        "farm size in acres (convert bigha: 1 bigha ≈ 0.33 acre). "
+                        "ONLY if the farmer gave an actual number — never a guess "
+                        "for a vague size like 'small' or 'a bit of land'."
+                    ),
+                },
+                "soil_type": {
+                    "type": "string",
+                    "description": (
+                        "sandy | loam | clay | silt — ONLY if their words clearly "
+                        "name one of these four; never guess from a vague answer."
+                    ),
+                },
                 "water_availability": {"type": "string", "description": "rainfed | limited | canal | tubewell/reliable"},
-                "budget_bdt": {"type": "number", "description": "working budget in BDT"},
+                "budget_bdt": {
+                    "type": "number",
+                    "description": (
+                        "working budget in BDT. ONLY if the farmer gave an actual "
+                        "figure ('15k', '1 lakh', a number) — never a guess for a "
+                        "vague amount like 'small budget' or 'not much money'."
+                    ),
+                },
                 "target_season": {"type": "string", "description": "e.g. Aman/Kharif-2, Boro, Rabi"},
             },
         },
