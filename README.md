@@ -48,8 +48,8 @@ from a real call, not model imagination.
         │   └───────┘   │  KB)  │   └────────┘  └────────┘            │
         │               └───────┘                                    │
         │                                                            │
-        │   Memory (SQLite): farms, sessions, messages, plans        │
-        │   bdapps CaaS module (sandbox checkout / charging flow)     │
+        │   Memory (SQLite): farms, sessions, messages, trace, receipts │
+        │   bdapps module: CaaS charge + SMS (sandbox by default)     │
         └────────────────────────────────────────────────────────────┘
 ```
 
@@ -162,6 +162,8 @@ The hackathon README **must** state what is real vs mock. Keep this table honest
 | Weather (rainfall, temperature, forecast) | **REAL** | Open-Meteo API (keyless) |
 | Agronomic knowledge base (crop calendars, fertilizer guides, soil/yield refs) | **REAL (collected)** | Public extension manuals — see `docs/data-sources.md` |
 | Crop/soil suitability rules | REAL-derived | Grounded in retrieved KB |
+| Crop yield & production-cost reference (drives `compute_financials`, `recommend_crops`) | **REAL-derived (compiled)** | `data/seed/crop_economics.json`, `crop_profiles.json` — compiled from public DAE/BARI/BARC figures; the file's own note calls these "planning estimates" |
+| Selling price used in financial projection & crop ranking | **MOCK / seeded** | `data/seed/market_prices.json` — the SAME seeded prices as the Market tab, unless the farmer states their own price. This is the one mock input feeding an otherwise real-derived financial calculation — worth knowing before trusting the exact ROI/BDT figures |
 | Fertilizer doses — rice, maize, potato, wheat, mustard, jute | **REAL (collected)** | DAE/BARC figures in `data/knowledge_base/fertilizer_guide.md`, transcribed to `data/seed/fertilizer_reference.json` |
 | Fertilizer doses — brinjal, tomato, onion, garlic, chili | **REAL (primary source)** | BARC FRG-2018 (`data/sources/FRG-2018.pdf`), cited per page; nutrient kg/ha → product kg/acre via FRG Appendix-2 percentages, derivation stored and unit-tested |
 | Urea / TSP / DAP / MoP prices | **REAL** | Government-fixed dealer prices (MoA notification, Apr-2023) |
@@ -172,8 +174,11 @@ The hackathon README **must** state what is real vs mock. Keep this table honest
 | Supplier catalog | **MOCK / seeded** | `data/seed/suppliers.json` |
 | Plant disease diagnosis (photo → condition) | **REAL** | OpenAI vision model on the farmer's uploaded photo |
 | Disease treatment / prevention / cost | **REAL (collected)** where matched | KB `data/seed/pest_reference.json`; falls back to model advice (flagged `kb_grounded:false`) |
-| bdapps CaaS charging | **SANDBOX / simulated** | `bdapps/caas.py` (mirrors bdapps CaaS request/response) |
-| LLM reasoning | REAL | OpenAI (gpt-4o-mini default, configurable) |
+| bdapps CaaS charging (Direct Debit) | **SANDBOX by default / LIVE optional** | `bdapps/caas.py` — sandbox deterministically simulates the real request/response contract; `BDAPPS_SANDBOX=false` + provisioned credentials hits the actual bdapps endpoint |
+| bdapps SMS delivery (season alerts) | **SANDBOX by default / LIVE optional** | `bdapps/sms.py` — same split as CaaS above |
+| Voice input (🎤) | **REAL (browser-native)** | Web Speech API — no backend call, no key; runs entirely client-side |
+| LLM reasoning + tool-calling | REAL | OpenAI (gpt-4o-mini default, configurable) |
+| LLM vision (photo diagnosis) | REAL | same OpenAI model, vision mode — see `tools/disease.py` |
 
 ## Repository layout
 
@@ -183,16 +188,23 @@ Alnitak-AgriSense/
 │   ├── app/
 │   │   ├── api/        HTTP routes + Pydantic schemas
 │   │   ├── agent/      orchestrator, prompts, tool registry, trace, LLM client
-│   │   ├── tools/      weather, crops, season_plan, finance, fertilizer, pests, ...
+│   │   ├── tools/      weather, crops, season_plan, finance, fertilizer, pests,
+│   │   │               scenario, advisory, market, suppliers, disease, ...
 │   │   ├── rag/        ingest + retrieve over the knowledge base
-│   │   ├── memory/     SQLite models + store (farms, sessions, messages)
-│   │   └── bdapps/     CaaS sandbox checkout/charging module
-│   ├── data/           knowledge_base/ (RAG docs) + seed/ (mock data)
+│   │   ├── memory/     SQLite models + store (farms, sessions, messages, trace, receipts)
+│   │   └── bdapps/     CaaS Direct Debit + SMS Send (sandbox by default, live optional)
+│   ├── data/
+│   │   ├── knowledge_base/  RAG docs — real, collected
+│   │   ├── seed/            structured reference data — real (compiled) + disclosed mock
+│   │   └── sources/         primary-source PDFs (e.g. FRG-2018) + page index (not committed — see its README)
 │   ├── scripts/        one-off scripts (KB ingest)
 │   └── tests/
 ├── frontend/           Vite + React chat UI with live trace panel
 ├── bdapps-reference/   ORIGINAL provided bdapps PHP (reference only — not run by us)
-└── docs/               architecture, tier checklist, data sources
+├── bdapps-relay/       OUR PHP relay for the bdapps IP allowlist — lets the backend
+│                       run anywhere and still make real bdapps calls in live mode
+│                       (see docs/bdapps-setup.md)
+└── docs/               architecture.md, tier-checklist.md, data-sources.md, bdapps-setup.md
 ```
 
 ## Setup
@@ -219,13 +231,43 @@ npm run dev
 
 Backend docs (Swagger) at `http://localhost:8000/docs`.
 
+> **bdapps needs no extra setup to demo.** `BDAPPS_SANDBOX=true` is the default
+> in `.env.example`, so the payment/SMS flow runs as a deterministic local
+> simulation with zero bdapps credentials. To hit the real bdapps sandbox
+> instead, set `BDAPPS_SANDBOX=false` and provide `BDAPPS_APP_ID` /
+> `BDAPPS_APP_PASSWORD` — see [`docs/bdapps-setup.md`](docs/bdapps-setup.md) for
+> provisioning, and the same file for the optional IP-allowlist relay
+> (`bdapps-relay/`) needed when the backend isn't hosted on a whitelisted IP.
+
 ## Tools & APIs used
-- **LLM:** OpenAI (`OPENAI_API_KEY`, default `gpt-4o-mini`) — provider abstraction in `agent/llm.py`.
-- **Weather:** [Open-Meteo](https://open-meteo.com/) — free, keyless, real forecast + historical.
-- **Vector store / RAG:** ChromaDB (local, persistent).
-- **Memory:** SQLite via SQLAlchemy.
-- **bdapps CaaS:** sandbox simulation of the Charging-as-a-Service flow (per
-  [bdapps tap API docs](https://dev.bdapps.com/API_Documentation/bdapps_tap_api.html)).
+- **LLM (reasoning + tool-calling):** OpenAI (`OPENAI_API_KEY`, default
+  `gpt-4o-mini`) — provider abstraction in `agent/llm.py`. Drives the agent
+  loop, the deterministic intake extraction, and every farmer-facing reply
+  (English or Bengali).
+- **LLM (vision):** the same OpenAI model in vision mode diagnoses a farmer's
+  uploaded leaf photo (`tools/disease.py`) — a real image-understanding call,
+  not a mock classifier.
+- **Weather:** [Open-Meteo](https://open-meteo.com/) — free, keyless, real
+  forecast + historical + geocoding.
+- **Vector store / RAG:** ChromaDB (local, persistent) over
+  `data/knowledge_base/`.
+- **Memory:** SQLite via SQLAlchemy — farms, sessions, messages, the full
+  agent trace, and payment receipts.
+- **bdapps CaaS (Direct Debit):** `bdapps/caas.py` — checkout → operator
+  balance charge → receipt. Sandbox by default (mirrors the real
+  request/response contract exactly, no network); live mode POSTs to the
+  actual bdapps endpoint with provisioned credentials. Per
+  [bdapps API docs](https://dev.bdapps.com/API_Documentation/bdapps_tap_api.html).
+- **bdapps SMS Send:** `bdapps/sms.py` — after a successful charge, delivers
+  the season's weather/pest alerts to the farmer's phone by SMS. Same
+  sandbox/live split as CaaS.
+- **bdapps relay (`bdapps-relay/*.php`):** bdapps only accepts CaaS/SMS calls
+  from a whitelisted host IP. This small PHP relay, deployed on that host,
+  lets our FastAPI backend — running anywhere — still make real bdapps calls
+  in live mode. Optional; unused in sandbox mode.
+- **Web Speech API:** browser-native speech-to-text (no backend call, no key)
+  powers the 🎤 voice input in the chat panel, in Bengali (`bn-BD`) or English
+  (`en-US`).
 
 ## Team
 **Alnitak** — IUT 12th ICT Fest, Bdapps Agentic AI Hackathon (Final Round).

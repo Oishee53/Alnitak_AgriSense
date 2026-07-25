@@ -2,10 +2,10 @@
 // sent) and tool result (raw values returned) so a judge can confirm each
 // number came from a real call.
 const KIND_ICON = {
-  thought: "💭",
-  tool_call: "🛠️",
-  tool_result: "📥",
-  message: "💬",
+  thought: "",
+  tool_call: "",
+  tool_result: "",
+  message: "",
 };
 
 export default function TracePanel({ trace }) {
